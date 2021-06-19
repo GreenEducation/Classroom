@@ -1,0 +1,18 @@
+@use '../styles/variables' as *;
+
+.container {
+  display: flex;
+
+  &__main {
+    margin-top: 65px;
+    margin-left: 16rem;
+    padding: 0;
+    width: 100%;
+  }
+}
+
+@media only screen and (max-width: $md) {
+  .container__main {
+    margin-left: 0;
+  }
+}

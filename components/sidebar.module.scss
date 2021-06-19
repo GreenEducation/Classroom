@@ -1,0 +1,24 @@
+@use '../styles/variables' as *;
+
+.sidebar {
+  margin: 65px 0 0 0;
+  width: 12rem;
+  height: 100vh;
+  background: $white;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  position: fixed;
+
+  &__link {
+    padding: 0.25rem 0;
+  }
+}
+
+@media only screen and (max-width: $md) {
+  .sidebar {
+    display: none;
+  }
+}

@@ -1,0 +1,15 @@
+@import '_variables.scss';
+
+.borderRound {
+  border-radius: 1em;
+}
+
+.borderCircle {
+  border-radius: 9999px;
+}
+
+.card {
+  border: 1px solid $black;
+  padding: 1em;
+  margin: 1em 0.5em;
+}

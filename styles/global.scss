@@ -1,0 +1,87 @@
+@font-face {
+  font-family: 'Calibre';
+  src: local('Calibre'), url(./fonts/calibre-regular.woff) format('woff');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Calibre';
+  src: local('Calibre'), url(./fonts/calibre-light.woff) format('woff');
+  font-weight: 200;
+}
+@font-face {
+  font-family: 'Calibre';
+  src: local('Calibre'), url(./fonts/calibre-bold.woff) format('woff');
+  font-weight: bold;
+}
+
+@import 'variables';
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background: $background;
+  color: $color;
+  font-family: $font-family;
+  line-height: 1.6;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+a {
+  color: $color;
+  text-decoration: none;
+  font-size: $p-font-size;
+}
+
+p {
+  font-size: $p-font-size !important;
+}
+small {
+  font-size: $small-font-size;
+  color: $gray;
+}
+h1 {
+  font-size: $h1-font-size;
+  font-weight: 400;
+  margin: 1rem 0;
+}
+h2 {
+  font-size: $h2-font-size;
+  font-weight: 200;
+  margin: 1rem 0;
+}
+h3 {
+  font-size: $h3-font-size;
+  font-weight: bold;
+  margin: 1rem 0;
+}
+h4 {
+  font-size: $h4-font-size;
+  font-weight: 400;
+  margin: 0.5rem 0;
+}
+h5 {
+  font-size: $h5-font-size;
+  font-weight: 400;
+  margin: 1rem 0;
+}
+h6 {
+  font-size: $h6-font-size;
+  font-weight: 400;
+  margin: 0.5rem 0;
+}
+
+hr {
+  width: 100%;
+  margin: 1.5rem 0;
+}
+
+.medium {
+  min-width: 20vw;
+  width: 17rem;
+  max-width: 95vw;
+  min-height: 20vw;
+  height: 17rem;
+  max-height: 95vw;
+}

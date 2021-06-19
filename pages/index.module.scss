@@ -1,0 +1,19 @@
+@use '../styles/variables' as *;
+
+.container {
+  display: flex;
+  flex-direction: column;
+  margin: 1.5rem;
+}
+
+.topSection {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  padding-top: 1.5rem;
+
+  > div {
+    margin: 0.25rem 0.5rem 0.5rem 0.5rem;
+  }
+}

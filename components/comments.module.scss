@@ -1,0 +1,87 @@
+@use '../styles/variables' as *;
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.commentsInput {
+
+  &__text {
+    width: 100%;
+    border: 0;
+    border-bottom: 2px solid $black;
+    background: $background;
+    outline: 0;
+    margin-bottom: 0.5rem;
+    font-size: $p-font-size;
+    font-weight: 400;
+    font-family: $font-family;
+  }
+
+  &__button {
+    font-size: $p-font-size;
+    font-weight: 100;
+    padding: 0.5rem 1rem;
+    color: $white;
+    background: $gray;
+    border: 0;
+    outline: 0;
+    align-self: flex-end;
+    font-family: $font-family;
+  }
+}
+
+.comment {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin: 0.5rem 0;
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    width: 5rem;
+    justify-content: center;
+    align-items: center;
+    margin-right: 1rem;
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  &__body {
+    width: fit-content;
+  }
+}
+
+.commentImage {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: $white;
+  position: relative;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.upArrow {
+  border: solid $black;
+  border-width: 0 1px 1px 0;
+  display: inline-block;
+  padding: 0.5rem;
+  transform: rotate(-135deg);
+  -webkit-transform: rotate(-135deg);
+}
+
+.downArrow {
+  border: solid $black;
+  border-width: 0 1px 1px 0;
+  display: inline-block;
+  padding: 0.5rem;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}

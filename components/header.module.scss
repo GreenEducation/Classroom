@@ -1,0 +1,27 @@
+@use '../styles/variables' as *;
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  background: $white;
+  padding: 0 2rem;
+  height: 65px;
+  width: -moz-available;
+  width: -webkit-fill-available;
+  width: stretch;
+  z-index: 999;
+
+  &__hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 25px;
+
+    span {
+      border: 1px solid $black;
+    }
+  }
+}

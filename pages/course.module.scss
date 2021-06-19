@@ -1,0 +1,46 @@
+@use '../styles/variables' as *;
+
+.container {
+  display: flex;
+  flex-direction: column;
+  margin: 1.5rem;
+}
+
+.main {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-self: center;
+  width: 100%;
+  max-width: $xl;
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    margin-right: 1.5rem;
+  }
+
+  &__right {
+    display: flex;
+    flex-direction: column;
+    margin: 2rem 0;
+  }
+}
+
+.upNext {
+  margin: 0.5rem 0 1rem 0;
+
+  > small {
+    color: $black;
+  }
+
+  h6 {
+    font-weight: bold;
+  }
+}
+
+.announcement p {
+  max-width: fit-content;
+}

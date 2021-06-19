@@ -1,0 +1,19 @@
+@use '../styles/variables' as *;
+
+.card {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border: 1px solid $black;
+
+  &__image {
+    grid-column: 1 / 2;
+    background-color: $blue;
+  }
+
+  &__text {
+    grid-column: 2 / 4;
+    display: flex;
+    flex-direction: column;
+    padding: 1em;
+  }
+}
