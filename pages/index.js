@@ -28,6 +28,7 @@ export default function Home() {
           <ActivityCard image="/images/cs.jpg" main="Assignment 3" sub="CS 246 | Assignment time: ~30 mins" />
         </div>
         <Card style={{width: `100%`}}>
+          <a href="/api/auth/logout">Logout</a>
           <br /><br /><br /><br /><br /><br /><br />
         </Card>
       </div>

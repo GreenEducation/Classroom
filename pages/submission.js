@@ -4,7 +4,7 @@ import Card from '../components/card'
 import Table from '../components/table'
 import styles from './submission.module.scss'
 
-export default function Home() {
+export default function Submission() {
 
   return (
     <Layout>
