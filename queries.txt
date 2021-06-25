@@ -1,0 +1,12 @@
+SELECT 1 file_url FROM activity WHERE user=rayyan SORT by order ASC
+or
+SELECT now from users where user=rayyan
+
+SELECT next from users where user=rayyan
+
+SELECT now from course where course_id=maths
+SELECT next from course where course_id=maths
+
+SELECT activities from modules where module_id=week1
+
+SELECT activity from module where module_id=week1 AND status=incomplete AND order ASC
