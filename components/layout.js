@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import Link from 'next/link'
 import styles from './layout.module.scss'
 import Header from './header'
 import Sidebar from './sidebar'
@@ -6,6 +7,7 @@ import Sidebar from './sidebar'
 export const siteTitle = 'GreenEd'
 
 export default function Layout({ children, home }) {
+
   return (
     <div className={styles.container}>
       <Head>
@@ -24,7 +26,12 @@ export default function Layout({ children, home }) {
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
       <Header />
-      <Sidebar></Sidebar>
+      <Sidebar>
+        <Link href="course"><a className={styles.sidebar__link}>Math 138</a></Link>
+        <Link href="course"><a className={styles.sidebar__link}>Math 237</a></Link>
+        <Link href="course"><a className={styles.sidebar__link}>CS 246</a></Link>
+        <Link href="course"><a className={styles.sidebar__link}>Psych 245</a></Link>
+      </Sidebar>
       <main className={styles.container__main}>{children}</main>
     </div>
   )

@@ -12,7 +12,7 @@
   align-items: flex-start;
   position: fixed;
 
-  &__link {
+  &__link, a {
     padding: 0.25rem 0;
   }
 }

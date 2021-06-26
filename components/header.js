@@ -1,13 +1,6 @@
-import { useUser } from '@auth0/nextjs-auth0';
 import styles from './header.module.scss'
 
 export default function Header() {
-
-  const { user, error, isLoading } = useUser();
-
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>{error.message}</div>;
-  let content = user ? user.name : <a href="/api/auth/login">Login</a>
 
   return (
     <div className={styles.header}>
@@ -19,7 +12,7 @@ export default function Header() {
         </div>
       </span>
       <span>
-        {content}
+        <a href="/api/auth/login">Login</a>
       </span>
     </div>
   )

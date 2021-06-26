@@ -1,3 +1,4 @@
+import { useUser } from '@auth0/nextjs-auth0'
 import Head from 'next/head'
 import Layout, { siteTitle } from '../components/layout'
 import BigHero from '../components/big-hero'
@@ -6,17 +7,30 @@ import ActivityCard from '../components/activity-card'
 import styles from './home.module.scss'
 
 /*
+TODO:
 if user is logged in:
   get email from auth0
   get first name from DB
   get list of active courses
   get list of activities where course_id matches any one of the active courses, sort using `order` and limit to 5, and use project to only get what you want
-  
+  get all announcements where course_id matches any one of the active courses, list in reverse chronological order
 else:
   redirect to index
+
+Add a 'show more' button for announcements
+Add a calendar below or above the annoucements
 */
 
 export default function Home() {
+  
+  const { user, error, isLoading } = useUser()
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>{error.message}</div>
+  //TODO: if not logged in: redirect users to the index page
+  if (!user) {
+    return <a href="/api/auth/login">Login</a>
+  }
 
   return (
     <Layout>
