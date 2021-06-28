@@ -1,6 +1,6 @@
 import styles from './header.module.scss'
 
-export default function Header() {
+export default function Header({ name }) {
 
   return (
     <div className={styles.header}>
@@ -12,7 +12,7 @@ export default function Header() {
         </div>
       </span>
       <span>
-        <a href="/api/auth/login">Login</a>
+        {name}
       </span>
     </div>
   )

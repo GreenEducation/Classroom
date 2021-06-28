@@ -6,7 +6,7 @@ import Sidebar from './sidebar'
 
 export const siteTitle = 'GreenEd'
 
-export default function Layout({ children, home }) {
+export default function Layout({ children, header }) {
 
   return (
     <div className={styles.container}>
@@ -25,7 +25,7 @@ export default function Layout({ children, home }) {
         <meta name="og:title" content={siteTitle} />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
-      <Header />
+      <Header name={header} />
       <Sidebar>
         <Link href="course"><a className={styles.sidebar__link}>Math 138</a></Link>
         <Link href="course"><a className={styles.sidebar__link}>Math 237</a></Link>

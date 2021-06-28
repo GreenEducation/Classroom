@@ -1,13 +1,16 @@
-import { useUser } from '@auth0/nextjs-auth0'
+import { useUser, withPageAuthRequired } from '@auth0/nextjs-auth0'
 import Head from 'next/head'
+import { connectToDatabase } from '../util/mongodb'
 import Layout, { siteTitle } from '../components/layout'
 import BigHero from '../components/big-hero'
 import Card from '../components/card'
 import ActivityCard from '../components/activity-card'
 import styles from './home.module.scss'
 
+
 /*
 TODO:
+https://www.youtube.com/watch?v=4sXAWsUub-s
 if user is logged in:
   get email from auth0
   get first name from DB
@@ -21,7 +24,7 @@ Add a 'show more' button for announcements
 Add a calendar below or above the annoucements
 */
 
-export default function Home() {
+export default function Home({ properties }) {
   
   const { user, error, isLoading } = useUser()
 
@@ -32,8 +35,9 @@ export default function Home() {
     return <a href="/api/auth/login">Login</a>
   }
 
+  console.log(properties)
   return (
-    <Layout>
+    <Layout header={properties.first_name}>
       <Head>
         <title>{siteTitle}</title>
       </Head>
@@ -58,3 +62,21 @@ export default function Home() {
     </Layout>
   )
 }
+
+
+export const getServerSideProps = withPageAuthRequired({
+
+  async getServerSideProps(context) {
+
+    const { db } = await connectToDatabase()
+    const data = await db.collection("users").findOne({ email: 'rayyanmaster@gmail.com' }, { first_name: 1, account_type: 1 })
+    
+    //you can select want properties to request using the .project() method
+    const properties = JSON.parse(JSON.stringify(data));
+
+
+    return {
+      props: { properties: properties },
+    }
+  }
+});
