@@ -7,7 +7,7 @@ import ActivityCard from '../../components/activity-card'
 import Checklist from '../../components/checklist'
 import styles from './module.module.scss'
 
-export default function Module({mod}) {
+export default function Module({module}) {
   return (
     <Layout>
       <Head>
@@ -17,7 +17,6 @@ export default function Module({mod}) {
         <div className={styles.main}>
 
           <div className={styles.main__left}>
-            <h6>{mod.name}</h6>
             <BigHero>
               <iframe width="100%" height="100%" src="https://www.youtube.com/embed/jjqgP9dpD1k"
                   title="YouTube video player" frameBorder="0"
@@ -31,7 +30,7 @@ export default function Module({mod}) {
             <div className={styles.content}>
               <small>Content for week 1</small>
               {
-                mod.activities?.map((activity) => (
+                module?.activities.map((activity) => (
                   <><ActivityCard layout="horizontal" image="/images/math.jpg"
                       main={activity.name} sub="Math 138 | Reading time: ~17 mins" /><br /></>
                 ))
@@ -54,7 +53,6 @@ export default function Module({mod}) {
   )
 }
 
-
 export async function getStaticPaths() {
   return {
     paths: [],
@@ -65,23 +63,19 @@ export async function getStaticPaths() {
 export async function getStaticProps({params}) {
 
   const { db } = await connectToDatabase()
-
-  // TODO: check module id before passing into the db
-  const data = await db.collection("modules")
+  const id = new ObjectId(params.module)
+  const res = await db.collection("modules")
     .findOne(
-      { _id: new ObjectId(params.module) },
+      { _id: id },
       { projection: { name: 1, activities: 1 }}
     )
-
-  // Handles the case where the module is not found
-  if (!data) {
-    return {
-      notFound: true,
-    }
-  }
+  const data = JSON.parse(JSON.stringify(res))
+  
+  // React or NextJS is unable to process complex JSON objects. So we are converting it to a string and parsing in on the client side
+  // We need to do this for each complex child (arrays and obj) in the object
 
   return {
-    props: {mod: JSON.parse(JSON.stringify(data))},
+    props: {module: data},
     revalidate: 1
   }
 }
