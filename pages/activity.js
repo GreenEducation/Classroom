@@ -4,7 +4,7 @@ import BigHero from '../components/big-hero'
 import ActivityCard from '../components/activity-card'
 import Checklist from '../components/checklist'
 import Comments from '../components/comments'
-import styles from './week.module.scss'
+import styles from './module/module.module.scss'
 
 export default function Activity() {
   return (
