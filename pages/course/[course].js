@@ -67,10 +67,19 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({params}) {
 
+  // Make sure the GET string (params.module) is valid
+  // Must be a hexa string of length 24
+  // TODO: make sure the string is hexa, use regex
+  if(params.course.length!=24) {
+    return {
+      notFound: true,
+    }
+  }
+
+  // Connect to DB and query using the passed course_id
   const { db } = await connectToDatabase()
 
-  // TODO: check course_id before passing into the db
-  // check if the user is in the given course
+  // TODO: Check if the user is in this course, else 404
   const data = await db.collection("courses")
     .findOne(
       {_id: new ObjectId(params.course)},
@@ -86,6 +95,6 @@ export async function getStaticProps({params}) {
 
   return {
     props: {modules: JSON.parse(JSON.stringify(data)).modules},
-    revalidate: 1
+    revalidate: 1 // re-render in 1 sec after every request
   }
 }

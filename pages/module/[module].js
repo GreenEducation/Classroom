@@ -30,6 +30,8 @@ export default function Module({module}) {
             <div className={styles.content}>
               <small>Content for week 1</small>
               {
+                // The page is rendered first, and is later re-rendered with the db data
+                // So we need to have 'module?'. To make sure the function is only run when module is loaded
                 module?.activities.map((activity) => (
                   <><ActivityCard layout="horizontal" image="/images/math.jpg"
                       main={activity.name} sub="Math 138 | Reading time: ~17 mins" /><br /></>
@@ -53,29 +55,53 @@ export default function Module({module}) {
   )
 }
 
+
 export async function getStaticPaths() {
+
+  //{ fallback: blocking } will server-render pages
+  // on-demand if the path doesn't exist.
+  //{ fallback: true } will server-render blank pages
+  // for every request and fill them with data on-demand
   return {
     paths: [],
-    fallback: true
+    fallback: 'blocking'
   }
 }
 
+// Runs both on the server and client
 export async function getStaticProps({params}) {
 
+  // Make sure the GET string (params.module) is valid
+  // Must be a hexa string of length 24
+  // TODO: make sure the string is hexa
+  if(params.module.length!=24) {
+    return {
+      notFound: true,
+    }
+  }
+
+  // Connect to DB and query using the passed module_id
+  // TODO: Check if the user is in this module, else 404
   const { db } = await connectToDatabase()
-  const id = new ObjectId(params.module)
   const res = await db.collection("modules")
     .findOne(
-      { _id: id },
+      { _id: new ObjectId(params.module) },
       { projection: { name: 1, activities: 1 }}
     )
+
+  // Handles the case where the module is not found
+  if (!res) {
+    return {
+      notFound: true,
+    }
+  }
+
+  // Processing the data so that react can work with it
+  // Converting complex json to simple json
   const data = JSON.parse(JSON.stringify(res))
-  
-  // React or NextJS is unable to process complex JSON objects. So we are converting it to a string and parsing in on the client side
-  // We need to do this for each complex child (arrays and obj) in the object
 
   return {
     props: {module: data},
-    revalidate: 1
+    revalidate: 1 // re-render in 1 sec after every request
   }
 }
