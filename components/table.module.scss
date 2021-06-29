@@ -1,0 +1,20 @@
+@use '../styles/variables' as *;
+
+.table {
+  border-spacing: 1.5rem 0;
+  margin: 1rem;
+  overflow-x: scroll;
+
+  th {
+    border-bottom: 2px solid $black;
+    padding: 0 1rem;
+    font-size: $h6-font-size;
+    font-weight: 400;
+  }
+
+  td {
+    padding: 0.5rem 1rem 0;
+    font-size: $p-font-size;
+    text-align: center;
+  }
+}

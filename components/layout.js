@@ -1,11 +1,13 @@
 import Head from 'next/head'
+import Link from 'next/link'
 import styles from './layout.module.scss'
 import Header from './header'
 import Sidebar from './sidebar'
 
 export const siteTitle = 'GreenEd'
 
-export default function Layout({ children, home }) {
+export default function Layout({ children, header, courses, modules }) {
+
   return (
     <div className={styles.container}>
       <Head>
@@ -23,8 +25,23 @@ export default function Layout({ children, home }) {
         <meta name="og:title" content={siteTitle} />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
-      <Header />
-      <Sidebar></Sidebar>
+      <Header name={header} />
+      <Sidebar>
+        {
+          courses?.map((course) => (
+            <Link href={`/course/${course.uid}`}>
+              <a>{course.name}</a>
+            </Link>
+          ))
+        }
+        {
+          modules?.map((module) => (
+            <Link href={`/module/${module.uid}`}>
+              <a>{module.name}</a>
+            </Link>
+          ))
+        }
+      </Sidebar>
       <main className={styles.container__main}>{children}</main>
     </div>
   )

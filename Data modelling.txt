@@ -1,0 +1,174 @@
+https://www.mongodb.com/basics/embedded-mongodb
+https://www.mongodb.com/blog/post/6-rules-of-thumb-for-mongodb-schema-design-part-3
+
+users {
+  id
+  uid
+  first_name
+  last_name
+  preferred_name
+  email
+  phone
+  school
+  date_of_birth
+  notifications
+  date_created
+  google_account
+  facebook_account
+  twitter_account
+  active_courses: [{name, id}]
+  archived_courses: [{name, id}]
+  account_type
+  deleted
+}
+
+courses {
+  id
+  uid
+  name
+  course_id (uni's id)
+  category
+  sub_category
+  modules [
+    { name, uid }
+  ]
+  chat_id
+  term
+  creator_id
+  staff: [
+    {name, role(course manager, instructor, other staff)}
+  ]
+  date_created
+  university: {name, university_id}
+  calendar_id
+  students_list: [ <9999
+    { name, uid }
+  ]
+  start_date
+  end_date
+}
+
+modules {
+  id
+  uid
+  name
+  activities_list: [
+    {name, uid}
+  ]
+  start_date
+  end_date
+}
+
+activities {
+  id
+  uid
+  name
+  type
+  module_id
+  course_id
+  file_url
+  file_type
+  description
+  comments_id
+  due_dates: []
+  penalties: [
+    {date, penalty}
+  ]
+  total_grade
+  final_percentage
+  students_list??? (for blocking and special cases)
+  duration
+  order
+  date_created
+  creator_id
+}
+
+course_profiles {
+  id
+  uid
+  course_name
+  course_id
+  student_id
+  student_name
+  date_joined
+  modules_list: [ <100
+    { uid, name, percent_completed }
+  ]
+  grade: [ <100
+    { id, activity_id, name, type, grade, final_percentage}
+  ] 
+}
+
+student_activities {
+  id
+  uid
+  name
+  activity_id
+  course_id
+  module_id
+  due_dates
+  status(incomplete, complete, expired)
+  percent_completed
+  type
+  grade
+  student_id
+  order
+  asked_help
+  help_message {
+    content
+    date_time
+  }
+}
+
+??course_content {
+  id
+  uid
+  name
+  course_id
+  module_id
+  activity_id
+  file_url
+  file_type
+  date_uploaded
+  uploaded_by
+  activity_type
+}
+
+announcements {
+  id
+  uid
+  course_id
+  course_name
+  creator_id
+  creator_pic
+  creator_name
+  content
+  date
+  allow_comments
+  comments_id
+}
+
+comments {
+  id
+  uid
+  course_id
+  item_type (announcement, quiz, exam, assignment, lecture, reading)
+  item_id
+
+  (if less than 100: embed, else reference)
+  comments_array: [ post_id ]
+}
+
+post {
+  id
+  uid
+  creator_id
+  creator_name
+  up_votes
+  down_votes
+  post_content
+  date_created
+  replies_list: [ post_id ]
+  can_reply
+  tag
+}

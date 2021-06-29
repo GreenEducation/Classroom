@@ -1,0 +1,43 @@
+@use '../styles/variables' as *;
+@use "sass:math";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  margin: 1.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.head {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.card {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: fit-content;
+  overflow-x: scroll;
+  max-width: calc(100vw - 6rem);
+}
+
+.dropdown {
+  padding: 0.5rem 1rem;
+  background: $white;
+  border-radius: 0.5rem;
+  font-family: $font-family;
+  font-size: $p-font-size;
+  outline: 0;
+}
+
+.dropdownLabel {
+  font-family: $font-family;
+  font-size: $p-font-size;
+  padding: 0.5rem;
+  color: $gray;
+}

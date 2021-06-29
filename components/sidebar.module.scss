@@ -12,7 +12,15 @@
   align-items: flex-start;
   position: fixed;
 
-  &__link {
+  &__top {
+    display: flex;
+    flex-direction: column;
+    max-height: 35vh;
+    overflow-y: auto;
+    width: 100%;
+  }
+
+  &__link, a {
     padding: 0.25rem 0;
   }
 }
