@@ -1,14 +1,16 @@
 import Head from 'next/head'
-import Layout, { siteTitle } from '../components/layout'
-import BigHero from '../components/big-hero'
-import Card from '../components/card'
-import ActivityCard from '../components/activity-card'
-import Checklist from '../components/checklist'
+import { ObjectId } from 'mongodb'
+import { connectToDatabase } from '../../util/mongodb'
+import Layout, { siteTitle } from '../../components/layout'
+import BigHero from '../../components/big-hero'
+import Card from '../../components/card'
+import ActivityCard from '../../components/activity-card'
+import Checklist from '../../components/checklist'
 import styles from './course.module.scss'
 
-export default function Course() {
+export default function Course({ modules }) {
   return (
-    <Layout>
+    <Layout modules={modules}>
       <Head>
         <title>{siteTitle}</title>
       </Head>
@@ -41,8 +43,7 @@ export default function Course() {
               <Card>
                 <small>Posted by Professor Jao - CS 235</small>
                 <h6>Assignment 5's due date has been pushed by 3 days</h6>
-                <p>Since a lot of students requested for it. We have decided to extend
-                   the deadline for this week's assignment</p>
+                <p>Since a lot of students requested for it.</p>
               </Card>
             </div>
           </div>
@@ -54,4 +55,37 @@ export default function Course() {
       </div>
     </Layout>
   )
+}
+
+
+export async function getStaticPaths() {
+  return {
+    paths: [],
+    fallback: true
+  }
+}
+
+export async function getStaticProps({params}) {
+
+  const { db } = await connectToDatabase()
+
+  // TODO: check course_id before passing into the db
+  // check if the user is in the given course
+  const data = await db.collection("courses")
+    .findOne(
+      {_id: new ObjectId(params.course)},
+      { projection: { modules: 1 }}
+    )
+  
+  // Handles the case where the course is not found
+  if (!data) {
+    return {
+      notFound: true,
+    }
+  }
+
+  return {
+    props: {modules: JSON.parse(JSON.stringify(data)).modules},
+    revalidate: 1
+  }
 }

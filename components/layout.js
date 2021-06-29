@@ -6,7 +6,7 @@ import Sidebar from './sidebar'
 
 export const siteTitle = 'GreenEd'
 
-export default function Layout({ children, header }) {
+export default function Layout({ children, header, courses, modules }) {
 
   return (
     <div className={styles.container}>
@@ -27,10 +27,20 @@ export default function Layout({ children, header }) {
       </Head>
       <Header name={header} />
       <Sidebar>
-        <Link href="course"><a className={styles.sidebar__link}>Math 138</a></Link>
-        <Link href="course"><a className={styles.sidebar__link}>Math 237</a></Link>
-        <Link href="course"><a className={styles.sidebar__link}>CS 246</a></Link>
-        <Link href="course"><a className={styles.sidebar__link}>Psych 245</a></Link>
+        {
+          courses?.map((course) => (
+            <Link href={`/course/${course.uid}`}>
+              <a>{course.name}</a>
+            </Link>
+          ))
+        }
+        {
+          modules?.map((module) => (
+            <Link href={`/module/${module.uid}`}>
+              <a>{module.name}</a>
+            </Link>
+          ))
+        }
       </Sidebar>
       <main className={styles.container__main}>{children}</main>
     </div>

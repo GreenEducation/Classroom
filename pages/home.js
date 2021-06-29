@@ -1,4 +1,4 @@
-import { useUser, withPageAuthRequired } from '@auth0/nextjs-auth0'
+import { withPageAuthRequired } from '@auth0/nextjs-auth0'
 import Head from 'next/head'
 import { connectToDatabase } from '../util/mongodb'
 import Layout, { siteTitle } from '../components/layout'
@@ -25,22 +25,13 @@ Add a calendar below or above the annoucements
 */
 
 export default function Home({ properties }) {
-  
-  const { user, error, isLoading } = useUser()
-
-  if (isLoading) return <div>Loading...</div>
-  if (error) return <div>{error.message}</div>
-  //TODO: if not logged in: redirect users to the index page
-  if (!user) {
-    return <a href="/api/auth/login">Login</a>
-  }
-
-  console.log(properties)
   return (
-    <Layout header={properties.first_name}>
+    <Layout header={properties.first_name} courses={properties.active_courses}>
+
       <Head>
         <title>{siteTitle}</title>
       </Head>
+
       <div className={styles.container}>
         <BigHero>
           <iframe width="100%" height="100%" src="https://www.youtube.com/embed/jjqgP9dpD1k"
@@ -59,21 +50,27 @@ export default function Home({ properties }) {
           <br /><br /><br /><br /><br /><br /><br />
         </Card>
       </div>
+
     </Layout>
   )
 }
 
 
+// Serverless function that runs on the backend
+// withPageAuthRequired ensures that the page is secured
 export const getServerSideProps = withPageAuthRequired({
 
+  // Querying data and passing them as props
   async getServerSideProps(context) {
 
     const { db } = await connectToDatabase()
-    const data = await db.collection("users").findOne({ email: 'rayyanmaster@gmail.com' }, { first_name: 1, account_type: 1 })
+    const data = await db.collection("users")
+      .findOne({ email: 'rayyanmaster@gmail.com' },
+               { projection: {first_name: 1, account_type: 1, active_courses: 1} })
     
-    //you can select want properties to request using the .project() method
+    // NextJS is unable to parse complex objects (i.e. objs inside objs)
+    // Converting complex objects to simple ones, so that nextjs can understand
     const properties = JSON.parse(JSON.stringify(data));
-
 
     return {
       props: { properties: properties },

@@ -13,12 +13,20 @@
   width: stretch;
   z-index: 999;
 
+  &__left {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+  }
+
   &__hamburger {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     width: 30px;
     height: 25px;
+    margin-right: 10px;
 
     span {
       border: 1px solid $black;
