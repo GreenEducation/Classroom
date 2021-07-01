@@ -41,15 +41,12 @@ export default function Home({ user_data, activities }) {
             allowFullScreen></iframe>
         </BigHero>
         <div className={styles.topSection}>
-          <ActivityCard image="/images/math.jpg" main="Chapter 1.5" sub="Math 138 | Reading time: ~17 mins" />
-          <ActivityCard image="/images/english.jpg" main="Lecture 4" sub="CS 246 | Watch time: ~12 mins" />
-          <ActivityCard image="/images/physics.jpg" main="Chapter 2.3" sub="Math 235 | Reading time: ~13 mins" />
-          <ActivityCard image="/images/cs.jpg" main="Assignment 3" sub="CS 246 | Assignment time: ~30 mins" />
+          {activities?.map((activity) => (
+            <ActivityCard image="/images/math.jpg" main={activity.details[0].name} 
+              sub={`${activity.details[0].name} | Time: ${activity.details[0].duration}mins`} />
+          ))}
         </div>
         <Card style={{width: `100%`}}>
-          {activities?.map((activity) => (
-            <p>{activity.type}</p>
-            ))}
           <a href="/api/auth/logout">Logout</a>
           <br /><br /><br /><br /><br /><br /><br />
         </Card>
@@ -68,15 +65,32 @@ export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(context) {
 
     const { db } = await connectToDatabase()
+    
+    // Querying basic user data
     const user_data = await db.collection("users")
       .findOne({ email: 'rayyanmaster@gmail.com' },
                { projection: {first_name: 1, account_type: 1, active_courses: 1} })
     
-    //new ObjectId("60d4c162ad30c9542761fecc")
+    // Querying activities based on the user's id
     const activities = await db.collection("student_activities").aggregate([
-      { $match: { student_id: new ObjectId(user_data._id) } },
+      { $match: { student_id: new ObjectId(user_data._id), status: "incomplete" } },
       { $sort: {order: 1} },
-      { $project: {activity_id: 1, type: 1} },
+      { 
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
+        } 
+      },
+      { 
+        $project: {
+          activity_id: 1,
+          percent_completed: 1,
+          type: 1,
+          details: {name: 1, duration: 1, file_url: 1}
+        }
+      },
       { $limit: 5 }
     ]).toArray()
 
