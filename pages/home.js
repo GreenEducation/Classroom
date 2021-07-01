@@ -1,5 +1,6 @@
 import { withPageAuthRequired } from '@auth0/nextjs-auth0'
 import { ObjectId } from 'mongodb'
+//import AWS from 'aws-sdk'
 import Head from 'next/head'
 import { connectToDatabase } from '../util/mongodb'
 import Layout, { siteTitle } from '../components/layout'
@@ -25,7 +26,7 @@ Add a 'show more' button for announcements
 Add a calendar below or above the annoucements
 */
 
-export default function Home({ user_data, activities }) {
+export default function Home({ user_data, nowActivity, activities }) {
   return (
     <Layout header={user_data.first_name} courses={user_data.active_courses}>
 
@@ -34,6 +35,7 @@ export default function Home({ user_data, activities }) {
       </Head>
 
       <div className={styles.container}>
+        {nowActivity?.details[0].name}
         <BigHero>
           <iframe width="100%" height="100%" src="https://www.youtube.com/embed/jjqgP9dpD1k"
             title="YouTube video player" frameBorder="0"
@@ -42,7 +44,8 @@ export default function Home({ user_data, activities }) {
         </BigHero>
         <div className={styles.topSection}>
           {activities?.map((activity) => (
-            <ActivityCard image="/images/math.jpg" main={activity.details[0].name} 
+            <ActivityCard image={activity.details[0].image_url} main={activity.details[0].name}
+              url={`/activity/${activity.activity_id}`}
               sub={`${activity.details[0].name} | Time: ${activity.details[0].duration}mins`} />
           ))}
         </div>
@@ -88,19 +91,40 @@ export const getServerSideProps = withPageAuthRequired({
           activity_id: 1,
           percent_completed: 1,
           type: 1,
-          details: {name: 1, duration: 1, file_url: 1}
+          details: {name: 1, duration: 1, image_url: 1, file_url: 1}
         }
       },
       { $limit: 5 }
     ]).toArray()
 
+    //pop the first activity off the array and pass it as the now activity
+    //and pass the rest as an array of activities
+    const nowActivity = JSON.parse(JSON.stringify(activities.shift()))
+
     // NextJS is unable to parse complex objects (i.e. objs inside objs)
     // Converting complex objects to simple ones, so that nextjs can understand
     //const properties = JSON.parse(JSON.stringify(data));
 
+
+    // Connecting to DigitalOcean using s3 sdk
+    /*const spacesEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com');
+    const s3 = new AWS.S3({
+        endpoint: spacesEndpoint,
+        accessKeyId: process.env.DO_SPACES_KEY,
+        secretAccessKey: process.env.DO_SPACES_SECRET
+    });
+
+    //Retrieving url for the desired image
+    const image_url = s3.getSignedUrl('getObject', {
+      Bucket: 'greened-users',
+      Key: 'cs.jpg',
+      Expires: 60 * 5
+    });*/
+
     return {
       props: {
         user_data: JSON.parse(JSON.stringify(user_data)),
+        nowActivity,
         activities: JSON.parse(JSON.stringify(activities))
       },
     }
