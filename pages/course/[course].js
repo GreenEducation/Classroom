@@ -8,24 +8,22 @@ import ActivityCard from '../../components/activity-card'
 import Checklist from '../../components/checklist'
 import styles from './course.module.scss'
 
-export default function Course({ modules }) {
+export default function Course({ modules, activities }) {
   return (
     <Layout modules={modules}>
       <Head>
         <title>{siteTitle}</title>
       </Head>
       <div className={styles.container}>
-        <BigHero>
-          <iframe width="100%" height="100%" src="https://www.youtube.com/embed/jjqgP9dpD1k"
-              title="YouTube video player" frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen></iframe>
-        </BigHero>
+        <BigHero type={activities[0].details[0].type} file_url={activities[0].details[0].file_url} />
         <div className={styles.main}>
           <div className={styles.main__left}>
             <div className={styles.upNext}>
               <small>Up next</small>
-              <ActivityCard layout="horizontal" image="/images/math.jpg" main="Chapter 1.5" sub="Math 138 | Reading time: ~17 mins" />
+              <ActivityCard layout="horizontal" image={activities[1].details[0].image_url}
+                main={activities[1].details[0].name} mainUrl={`/activity/${activities[1].activity_id}`}
+                sub={activities[1].details[0].course_name} subUrl={`/course/${activities[1].details[0].course_id}`}
+                duration={activities[1].details.duration} />
             </div>
             <div className={styles.announcement}>
               <Card>
@@ -61,7 +59,7 @@ export default function Course({ modules }) {
 export async function getStaticPaths() {
   return {
     paths: [],
-    fallback: true
+    fallback: 'blocking'
   }
 }
 
@@ -80,9 +78,10 @@ export async function getStaticProps({params}) {
   const { db } = await connectToDatabase()
 
   // TODO: Check if the user is in this course, else 404
+  const course_id = new ObjectId(params.course);
   const data = await db.collection("courses")
     .findOne(
-      {_id: new ObjectId(params.course)},
+      {_id: course_id},
       { projection: { modules: 1 }}
     )
   
@@ -93,8 +92,41 @@ export async function getStaticProps({params}) {
     }
   }
 
+  // Querying activities based on the user's id and course_id
+  const activities = await db.collection("student_activities").aggregate([
+    { $match: { student_id: new ObjectId("60d4c162ad30c9542761fecc"), course_id: course_id, status: "incomplete" } },
+    { $sort: {order: 1} },
+    { 
+      $lookup: {
+      from: "activities",
+      localField: "activity_id",
+      foreignField: "_id",
+      as: "details"
+      } 
+    },
+    { 
+      $project: {
+        activity_id: 1,
+        percent_completed: 1,
+        details: {
+          name: 1,
+          duration: 1,
+          image_url: 1,
+          file_url: 1,
+          type: 1,
+          course_id: 1,
+          course_name: 1,
+        }
+      }
+    },
+    { $limit: 2 }
+  ]).toArray()
+
   return {
-    props: {modules: JSON.parse(JSON.stringify(data)).modules},
+    props: {
+      modules: JSON.parse(JSON.stringify(data)).modules,
+      activities: JSON.parse(JSON.stringify(activities))
+    },
     revalidate: 1 // re-render in 1 sec after every request
   }
 }

@@ -17,13 +17,7 @@ export default function Activity({ activity }) {
       <div className={styles.container}>
         <div className={styles.main}>
           <div className={styles.main__left}>
-            { activity.name }
-            <BigHero>
-              <iframe width="100%" height="100%" src="https://www.youtube.com/embed/jjqgP9dpD1k"
-                  title="YouTube video player" frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowfullscreen></iframe>
-            </BigHero>
+            <BigHero type={activity.type} file_url={activity.file_url} />
             <div className={styles.upNext}>
               <small>Up next</small>
               <ActivityCard layout="horizontal" image="/images/math.jpg" main="Chapter 1.5" sub="Math 138 | Reading time: ~17 mins" />
@@ -72,7 +66,7 @@ export async function getStaticProps({params}) {
   const res = await db.collection("activities")
     .findOne(
       { _id: new ObjectId(params.activity) },
-      { projection: { name: 1 }}
+      { projection: { name: 1, type: 1, file_url: 1 }}
     )
 
   // Handles the case where the activity is not found

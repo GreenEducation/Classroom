@@ -67,8 +67,10 @@ activities {
   image_url
   module_id
   course_id
+  course_name
   file_url
   file_type
+  activity_type(image, pdf, RichText, video, youtube)
   description
   comments_id
   due_dates: []
@@ -110,7 +112,6 @@ student_activities {
   due_dates
   status(incomplete, complete, expired)
   percent_completed
-  type
   grade
   student_id
   order
@@ -173,3 +174,21 @@ post {
   can_reply
   tag
 }
+
+
+
+//import AWS from 'aws-sdk'
+// Connecting to DigitalOcean using s3 sdk
+    /*const spacesEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com');
+    const s3 = new AWS.S3({
+        endpoint: spacesEndpoint,
+        accessKeyId: process.env.DO_SPACES_KEY,
+        secretAccessKey: process.env.DO_SPACES_SECRET
+    });
+
+    //Retrieving url for the desired image
+    const image_url = s3.getSignedUrl('getObject', {
+      Bucket: 'greened-users',
+      Key: 'cs.jpg',
+      Expires: 60 * 5
+    });*/
