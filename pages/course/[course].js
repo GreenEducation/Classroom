@@ -23,7 +23,7 @@ export default function Course({ modules, activities }) {
               <ActivityCard layout="horizontal" image={activities[1].details[0].image_url}
                 main={activities[1].details[0].name} mainUrl={`/activity/${activities[1].activity_id}`}
                 sub={activities[1].details[0].course_name} subUrl={`/course/${activities[1].details[0].course_id}`}
-                duration={activities[1].details.duration} />
+                duration={activities[1].details[0].duration} />
             </div>
             <div className={styles.announcement}>
               <Card>
