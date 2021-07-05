@@ -8,24 +8,14 @@ import Card from '../components/card'
 import ActivityCard from '../components/activity-card'
 import styles from './home.module.scss'
 
-
-/*
-TODO:
-https://www.youtube.com/watch?v=4sXAWsUub-s
+/*TODO:
 if user is logged in:
   get email from auth0
-  get first name from DB
-  get list of active courses
-  get list of activities where course_id matches any one of the active courses, sort using `order` and limit to 5, and use project to only get what you want
-  get all announcements where course_id matches any one of the active courses, list in reverse chronological order
-else:
-  redirect to index
-
 Add a 'show more' button for announcements
 Add a calendar below or above the annoucements
 */
 
-export default function Home({ user_data, nowActivity, activities }) {
+export default function Home({ user_data, nowActivity, activities, announcements }) {
 
   return (
     <Layout header={user_data.first_name} courses={user_data.active_courses}>
@@ -35,7 +25,7 @@ export default function Home({ user_data, nowActivity, activities }) {
       </Head>
 
       <div className={styles.container}>
-        <BigHero type={nowActivity?.details[0].type} file_url={nowActivity.details[0].file_url} />
+        <BigHero type={nowActivity?.details[0].file_type} file_url={nowActivity.details[0].file_url} />
         <div className={styles.topSection}>
           {activities?.map((activity) => (
             <ActivityCard image={activity.details[0].image_url} main={activity.details[0].name}
@@ -43,6 +33,15 @@ export default function Home({ user_data, nowActivity, activities }) {
               sub={activity.details[0].course_name} duration={activity.details[0].duration} />
           ))}
         </div>
+        {
+          announcements?.map((announcement) => (
+            <Card>
+              <small>Posted by {announcement.creator_name} - {announcement.course_name}</small>
+              <h6>{announcement.title}</h6>
+              <p>{announcement.content}</p>
+            </Card>
+          ))
+        }
         <Card style={{width: `100%`}}>
           <a href="/api/auth/logout">Logout</a>
           <br /><br /><br /><br /><br /><br /><br />
@@ -90,7 +89,7 @@ export const getServerSideProps = withPageAuthRequired({
             duration: 1,
             image_url: 1,
             file_url: 1,
-            type: 1,
+            file_type: 1,
             course_id: 1,
             course_name: 1,
           }
@@ -103,12 +102,19 @@ export const getServerSideProps = withPageAuthRequired({
     //and pass the rest as an array of activities
     const nowActivity = JSON.parse(JSON.stringify(activities.shift()))
 
+    // Querying announcements based on the course_id
+    const active_course_ids = user_data.active_courses.map((course) => (course.uid))
+    const announcements = await db.collection("announcements")
+    .find( { course_id: { $in: active_course_ids } } )
+    .project({ creator_name: 1, course_name: 1, title: 1, content: 1 }).sort({ date: -1 }).toArray()
+
 
     return {
       props: {
         user_data: JSON.parse(JSON.stringify(user_data)),
         nowActivity,
-        activities: JSON.parse(JSON.stringify(activities))
+        activities: JSON.parse(JSON.stringify(activities)),
+        announcements: JSON.parse(JSON.stringify(announcements))
       },
     }
   }

@@ -63,14 +63,13 @@ activities {
   id
   uid
   name
-  type
+  type(reading, video, quiz, assignment, exam)
   image_url
   module_id
   course_id
   course_name
   file_url
-  file_type
-  activity_type(image, pdf, RichText, video, youtube)
+  file_type(image, pdf, RichText, video, youtube)
   description
   comments_id
   due_dates: []
@@ -144,6 +143,7 @@ announcements {
   creator_id
   creator_pic
   creator_name
+  title
   content
   date
   allow_comments

@@ -26,9 +26,9 @@ export default function Activity({ activity }) {
               {'name': 'Ahmed', 'content': 'I could not understand how we got the final answer from 7.5. Can someone explain that to me please?'}]} />
           </div>
           <div className={styles.main__right}>
-            <Checklist title="Submissions" items={[["Assignment 2", true], ["Assignment 3", false], ["Assignment 4", true]]} />
-            <Checklist title="Due this week" items={[["Assignment 2", true], ["Assignment 3", false], ["Assignment 4", true]]} />
-            <Checklist title="To Do" items={[["Assignment 2", true], ["Assignment 3", false], ["Quiz 3", true]]} />
+            <Checklist title="Submissions"  />
+            <Checklist title="Due this week"  />
+            <Checklist title="To Do"/>
           </div>
         </div>
       </div>

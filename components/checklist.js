@@ -1,15 +1,15 @@
 import Link from 'next/link'
 import styles from './checklist.module.scss'
 
-function CheckListItem({item, done}) {
+function CheckListItem({item, done, id}) {
   return (
     <span className={styles.item}>
         {done ? 
-        <input type="checkbox" className={styles.checkbox} id={item} checked /> :
-        <input type="checkbox" className={styles.checkbox} id={item} />
+        <input type="checkbox" className={styles.checkbox} id={id} defaultChecked /> :
+        <input type="checkbox" className={styles.checkbox} id={id} />
         }
-        <label for={item}>
-          <Link href="#"><a>{item}</a></Link>
+        <label for={id}>
+          <Link href={`/activity/${id}`}><a>{item}</a></Link>
         </label>
       <br />
     </span>
@@ -21,8 +21,9 @@ export default function Checklist({ title, items }) {
     <div className={styles.container}>
       <h6 className={styles.title}>{title}</h6>
       {
-        items.map(([key, value]) => (
-          <CheckListItem item={key} done={value} />
+        items.map((item) => (
+          <CheckListItem item={item.details[0].name} done={item.status=="complete"}
+            id={item.activity_id} />
         ))
       }
     </div>
