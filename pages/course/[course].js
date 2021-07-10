@@ -9,7 +9,7 @@ import Checklist from '../../components/checklist'
 import styles from './course.module.scss'
 
 
-export default function Course({ modules, activities, announcements }) {
+export default function Course({ modules, activities, todo, due_soon, announcements }) {
   return (
     <Layout modules={modules}>
       <Head>
@@ -39,8 +39,8 @@ export default function Course({ modules, activities, announcements }) {
             </div>
           </div>
           <div className={styles.main__right}>
-            <Checklist title="Due this week" items={activities} />
-            <Checklist title="To Do" items={activities} />
+            <Checklist title="Due this week" items={due_soon} />
+            <Checklist title="To Do" items={todo} />
           </div>
         </div>
       </div>
@@ -67,31 +67,57 @@ export async function getStaticProps({params}) {
   const course_id = new ObjectId(params.course)
 
 
-  // Check if the user is enrolled in this course
-  const user_course = await db.collection("users")
+  // Check if the user is enrolled in this course & get modules in the course
+  const course_profile = await db.collection("course_profiles")
     .findOne(
-      {_id: new ObjectId("60d4c162ad30c9542761fecc"), active_courses: {uid: course_id} },
-      { projection: { first_name: 1 }}
-    )
-  // Handles the case where the user is not enrolled in this course
-  if (!user_course) return { notFound: true }
-
-
-  // Get the modules in this course
-  const data = await db.collection("courses")
-    .findOne(
-      {_id: course_id},
+      { student_id: new ObjectId("60d4c162ad30c9542761fecc"), course_id: course_id },
       { projection: { modules: 1 }}
     )
-  // Handles the case where the course is not found
-  if (!data) return { notFound: true }
+  // Handles the case where the user is not enrolled in this course
+  // or the course is not found
+  if (!course_profile) return { notFound: true }
 
 
-  // TODO: load activities from the most recent module, from this week(sat-sun)
-  //       load now and next activities
-  // Querying activities based on the user's id and course_id
+  // Calculate the first and last day of this week
+  // TODO: make it between the last 3 and next 3 days??
+  let today = new Date
+  let first = today.getDate() - today.getDay(); // First day is the day of the month - the day of the week
+  let last = first + 6; // last day is the first day + 6
+  let firstday = new Date(today.setDate(first));
+  let lastday = new Date(today.setDate(last));
+  
+  // Get the activities due this week
+  const due_soon = await db.collection("student_activities").aggregate([
+    { $match: {
+      student_id: new ObjectId("60d4c162ad30c9542761fecc"),
+      course_id: course_id,
+      due_dates: { $gte: firstday, $lte: lastday }
+    }},
+    { $sort: {due_dates: 1} },
+    { 
+      $lookup: {
+      from: "activities",
+      localField: "activity_id",
+      foreignField: "_id",
+      as: "details"
+      }
+    },
+    {
+      $project: {
+        activity_id: 1,
+        percent_completed: 1,
+        status: 1,
+        details: { name: 1 }
+      }
+    },
+    { $limit: 5 }
+  ]).toArray()
+
+
+  // Querying now and next activities based on the user's id and course_id
+  // TODO: handle the case where there are no such activities
   const activities = await db.collection("student_activities").aggregate([
-    { $match: { student_id: new ObjectId("60d4c162ad30c9542761fecc"), course_id: course_id } },
+    { $match: { student_id: new ObjectId("60d4c162ad30c9542761fecc"), course_id: course_id, status: "incomplete" } },
     { $sort: {order: 1} },
     { 
       $lookup: {
@@ -117,10 +143,40 @@ export async function getStaticProps({params}) {
         }
       }
     },
+    { $limit: 2 }
+  ]).toArray()
+
+
+  // Querying activities from the oldest incomplete module,
+  // sort incomplete activities first and then complete
+  const latest_module = course_profile.modules.find((module) => (
+    module.percent_completed!=100
+  ))
+  const todo = await db.collection("student_activities").aggregate([
+    { $match: {
+      student_id: new ObjectId("60d4c162ad30c9542761fecc"),
+      module_id: new ObjectId(latest_module.uid)
+    }},
+    { $sort: {status: -1, order: 1} },
+    { 
+      $lookup: {
+      from: "activities",
+      localField: "activity_id",
+      foreignField: "_id",
+      as: "details"
+      }
+    },
+    {
+      $project: {
+        activity_id: 1,
+        percent_completed: 1,
+        status: 1,
+        details: { name: 1 }
+      }
+    },
     { $limit: 5 }
   ]).toArray()
 
-  //const nextActivities = activities.filter((activity) => {activity.status=="incomplete"})
 
   // Querying announcements based on the course_id
   const announcements = await db.collection("announcements")
@@ -130,8 +186,10 @@ export async function getStaticProps({params}) {
 
   return {
     props: {
-      modules: JSON.parse(JSON.stringify(data)).modules,
+      modules: JSON.parse(JSON.stringify(course_profile)).modules,
       activities: JSON.parse(JSON.stringify(activities)),
+      due_soon: JSON.parse(JSON.stringify(due_soon)),
+      todo: JSON.parse(JSON.stringify(todo)),
       announcements: JSON.parse(JSON.stringify(announcements))
     },
     revalidate: 1 // re-render in 1 sec after every request

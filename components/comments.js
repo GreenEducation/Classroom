@@ -2,7 +2,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import styles from './comments.module.scss'
 
-function Comment({image, name, content}) {
+// Add upvote and down vote functionality
+function Comment({image, name, content, can_reply}) {
   return (
     <div className={styles.comment}>
       <div className={styles.comment__left}>
@@ -21,7 +22,7 @@ function Comment({image, name, content}) {
         <p>
           <b>{ name }</b><br />
           {content}<br />
-          <small>Reply</small>
+          {can_reply ? <small>Reply</small> : ''}
         </p>
       </div>
     </div>
@@ -54,8 +55,14 @@ export default function Comments({ user, comments }) {
     <div className={styles.container}>
       <CommentInput image={user.image} />
       {
-        comments.map(({image, name, content}) => (
-          <Comment image={image} name={name} content={content} />
+        comments.map(
+          ({
+            image='https://greened-users.nyc3.digitaloceanspaces.com/user.png',
+            creator_name,
+            post_content,
+            can_reply
+          }) => (
+          <Comment image={image} name={creator_name} content={post_content} can_reply={can_reply} />
         ))
       }
     </div>

@@ -20,6 +20,7 @@
 .card {
   display: flex;
   justify-content: flex-start;
+  flex-direction: column;
   align-items: center;
   width: fit-content;
   overflow-x: scroll;

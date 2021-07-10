@@ -1,11 +1,13 @@
+import { withPageAuthRequired } from '@auth0/nextjs-auth0'
+import Link from 'next/link'
 import Head from 'next/head'
+import { connectToDatabase } from '../util/mongodb'
 import Layout, { siteTitle } from '../components/layout'
 import Card from '../components/card'
 import Table from '../components/table'
 import styles from './submission.module.scss'
 
-export default function Submission() {
-
+export default function Submission({activities_set}) {
   return (
     <Layout>
       <Head>
@@ -24,39 +26,104 @@ export default function Submission() {
             </select>
           </span>
         </div>
-        <Card className={styles.card}>
-          <Table>
-            <thead>
-              <tr>
-                <th>Task</th>
-                <th>Module</th>
-                <th>Due Date</th>
-                <th>Grade</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Assignment 1</td>
-                <td>Week 1</td>
-                <td>09 June 2021</td>
-                <td>70%</td>
-              </tr>
-              <tr>
-                <td>Assignment 2</td>
-                <td>Week 2</td>
-                <td>16 June 2021</td>
-                <td>89%</td>
-              </tr>
-              <tr>
-                <td>Assignment 3</td>
-                <td>Week 3</td>
-                <td>23 June 2021</td>
-                <td>76%</td>
-              </tr>
-            </tbody>
-          </Table>
-        </Card>
+        {
+          activities_set?.map((activities) => (
+            <Card className={styles.card}>
+              <h6>{activities[0].course_name}</h6>
+              <Table>
+                <thead>
+                  <tr>
+                    <th>Task</th>
+                    <th>Module</th>
+                    <th>Due Date</th>
+                    <th>Grade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {
+                    activities.map((activity) => (
+                      <tr>
+                        <td><Link href={`/activity/${activity._id}`}><a>{activity.name}</a></Link></td>
+                        <td>
+                          <Link href={`/module/${activity.module[0]._id}`}><a>
+                          {activity.module[0].name}
+                          </a></Link>
+                        </td>
+                        <td>{new Date(activity.due_dates[0]).toDateString()}</td>
+                        <td>{activity.final_percentage}%</td>
+                      </tr>
+                    ))
+                  }
+                  <tr>
+                    <td>Assignment 2</td>
+                    <td>Week 2</td>
+                    <td>16 June 2021</td>
+                    <td>89%</td>
+                  </tr>
+                </tbody>
+              </Table>
+            </Card>
+          ))
+        }
       </div>
     </Layout>
   )
 }
+
+
+export const getServerSideProps = withPageAuthRequired({
+
+  // Querying data and passing them as props
+  async getServerSideProps(context) {
+
+    const { db } = await connectToDatabase()
+
+    // Querying basic user data
+    const user_data = await db.collection("users")
+      .findOne({ email: 'rayyanmaster@gmail.com' },
+               { projection: {active_courses: 1} })
+    
+    // Querying activities based on the user's id
+    const active_course_ids = user_data.active_courses.map((course) => (course.uid))
+    const activities = await db.collection("activities").aggregate([
+      { $match: {
+        course_id: { $in: active_course_ids },
+        activity_type: { $in: ['quiz','assignment','exam'] }
+      }},
+      { $sort: { course_id: 1, activity_type: 1, order: 1} },
+      {
+        $lookup: {
+          from: "modules",
+          localField: "module_id",
+          foreignField: "_id",
+          as: "module"
+        } 
+      },
+      {
+        $project: {
+          name: 1,
+          due_dates: 1,
+          course_id: 1,
+          course_name: 1,
+          final_percentage: 1,
+          module: {
+            _id: 1,
+            name: 1
+          }
+        }
+      }
+    ]).toArray()
+
+
+    const activities_set = active_course_ids.map((course_id) => {
+      return activities.filter((activity) => (activity.course_id.toString()===course_id.toString()))
+    })
+
+
+    return {
+      props: {
+        activities_set: JSON.parse(JSON.stringify(activities_set))
+      },
+    }
+  }
+});

@@ -2,16 +2,23 @@ import { withPageAuthRequired } from '@auth0/nextjs-auth0';
 import Head from 'next/head'
 import Layout, { siteTitle } from '../components/layout'
 import { connectToDatabase } from '../util/mongodb'
+import styles from './settings.module.scss'
 
 export default function Settings({ properties }) {
 
-  console.log(properties)
   return (
     <Layout>
       <Head>
         <title>{siteTitle}</title>
       </Head>
-      <div>
+      <div className={styles.container}>
+        <h5>Settings</h5>
+        <form>
+          <input type="text" />
+          <input type="text" />
+          <input type="text" />
+          <button>Save</button>
+        </form>
       </div>
     </Layout>
   )

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import styles from './big-hero.module.scss'
 
 export default function BigHero({ children, type, file_url="/" }) {
@@ -9,14 +10,18 @@ export default function BigHero({ children, type, file_url="/" }) {
                       src={file_url}
                       layout="fill"
                       alt="algorithms on a paper"
-                      objectFit="cover"
+                      objectFit="contain"
                     />
       break;
     case "pdf":
-      heroContent = <></>
+      heroContent = <iframe width="100%" height="100%"
+                    src={file_url}
+                    title="PDF document" frameBorder="0"
+                    allowFullScreen></iframe>
       break;
     case "video":
-      heroContent = <video width="100%" height="auto" autoplay controls>
+      heroContent = <video style={{width: `inherit`, height: `inherit`, maxHeight: `100%`, maxWidth: `100%`}}
+                      autoplay controls>
                       <source src={file_url} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>

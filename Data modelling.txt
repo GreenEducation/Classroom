@@ -36,7 +36,7 @@ courses {
   term
   creator_id
   staff: [
-    {name, role(course manager, instructor, other staff)}
+    {uid, name, role(course manager, instructor, other staff)}
   ]
   date_created
   university: {name, university_id}
@@ -104,7 +104,6 @@ course_profiles {
 student_activities {
   id
   uid
-  name
   activity_id
   course_id
   module_id
@@ -141,7 +140,6 @@ announcements {
   course_id
   course_name
   creator_id
-  creator_pic
   creator_name
   title
   content
@@ -156,12 +154,10 @@ comments {
   course_id
   item_type (announcement, quiz, exam, assignment, lecture, reading)
   item_id
-
-  (if less than 100: embed, else reference)
   comments_array: [ post_id ]
 }
 
-post {
+posts {
   id
   uid
   creator_id

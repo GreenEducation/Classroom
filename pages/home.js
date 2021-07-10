@@ -68,6 +68,7 @@ export const getServerSideProps = withPageAuthRequired({
       .findOne({ email: 'rayyanmaster@gmail.com' },
                { projection: {first_name: 1, account_type: 1, active_courses: 1} })
     
+    // TODO: handle the case where there are no such activities
     // Querying activities based on the user's id
     const activities = await db.collection("student_activities").aggregate([
       { $match: { student_id: new ObjectId(user_data._id), status: "incomplete" } },
