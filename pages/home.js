@@ -8,24 +8,15 @@ import Card from '../components/card'
 import ActivityCard from '../components/activity-card'
 import styles from './home.module.scss'
 
-
-/*
-TODO:
-https://www.youtube.com/watch?v=4sXAWsUub-s
+/*TODO:
 if user is logged in:
   get email from auth0
-  get first name from DB
-  get list of active courses
-  get list of activities where course_id matches any one of the active courses, sort using `order` and limit to 5, and use project to only get what you want
-  get all announcements where course_id matches any one of the active courses, list in reverse chronological order
-else:
-  redirect to index
-
 Add a 'show more' button for announcements
 Add a calendar below or above the annoucements
 */
 
-export default function Home({ user_data, activities }) {
+export default function Home({ user_data, nowActivity, activities, announcements }) {
+
   return (
     <Layout header={user_data.first_name} courses={user_data.active_courses}>
 
@@ -34,22 +25,24 @@ export default function Home({ user_data, activities }) {
       </Head>
 
       <div className={styles.container}>
-        <BigHero>
-          <iframe width="100%" height="100%" src="https://www.youtube.com/embed/jjqgP9dpD1k"
-            title="YouTube video player" frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen></iframe>
-        </BigHero>
+        <BigHero type={nowActivity?.details[0].file_type} file_url={nowActivity.details[0].file_url} />
         <div className={styles.topSection}>
-          <ActivityCard image="/images/math.jpg" main="Chapter 1.5" sub="Math 138 | Reading time: ~17 mins" />
-          <ActivityCard image="/images/english.jpg" main="Lecture 4" sub="CS 246 | Watch time: ~12 mins" />
-          <ActivityCard image="/images/physics.jpg" main="Chapter 2.3" sub="Math 235 | Reading time: ~13 mins" />
-          <ActivityCard image="/images/cs.jpg" main="Assignment 3" sub="CS 246 | Assignment time: ~30 mins" />
-        </div>
-        <Card style={{width: `100%`}}>
           {activities?.map((activity) => (
-            <p>{activity.type}</p>
-            ))}
+            <ActivityCard image={activity.details[0].image_url} main={activity.details[0].name}
+              mainUrl={`/activity/${activity.activity_id}`} subUrl={`/course/${activity.details[0].course_id}`}
+              sub={activity.details[0].course_name} duration={activity.details[0].duration} />
+          ))}
+        </div>
+        {
+          announcements?.map((announcement) => (
+            <Card>
+              <small>Posted by {announcement.creator_name} - {announcement.course_name}</small>
+              <h6>{announcement.title}</h6>
+              <p>{announcement.content}</p>
+            </Card>
+          ))
+        }
+        <Card style={{width: `100%`}}>
           <a href="/api/auth/logout">Logout</a>
           <br /><br /><br /><br /><br /><br /><br />
         </Card>
@@ -60,6 +53,7 @@ export default function Home({ user_data, activities }) {
 }
 
 
+
 // Renders the page on the server, CSR is better
 // withPageAuthRequired ensures that the page is secured
 export const getServerSideProps = withPageAuthRequired({
@@ -68,26 +62,60 @@ export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(context) {
 
     const { db } = await connectToDatabase()
+    
+    // Querying basic user data
     const user_data = await db.collection("users")
       .findOne({ email: 'rayyanmaster@gmail.com' },
                { projection: {first_name: 1, account_type: 1, active_courses: 1} })
     
-    //new ObjectId("60d4c162ad30c9542761fecc")
+    // TODO: handle the case where there are no such activities
+    // Querying activities based on the user's id
     const activities = await db.collection("student_activities").aggregate([
-      { $match: { student_id: new ObjectId(user_data._id) } },
+      { $match: { student_id: new ObjectId(user_data._id), status: "incomplete" } },
       { $sort: {order: 1} },
-      { $project: {activity_id: 1, type: 1} },
+      { 
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
+        } 
+      },
+      { 
+        $project: {
+          activity_id: 1,
+          percent_completed: 1,
+          details: {
+            name: 1,
+            duration: 1,
+            image_url: 1,
+            file_url: 1,
+            file_type: 1,
+            course_id: 1,
+            course_name: 1,
+          }
+        }
+      },
       { $limit: 5 }
     ]).toArray()
 
-    // NextJS is unable to parse complex objects (i.e. objs inside objs)
-    // Converting complex objects to simple ones, so that nextjs can understand
-    //const properties = JSON.parse(JSON.stringify(data));
+    //pop the first activity off the array and pass it as the now activity
+    //and pass the rest as an array of activities
+    const nowActivity = JSON.parse(JSON.stringify(activities.shift()))
+
+    // Querying announcements based on the course_id
+    const active_course_ids = user_data.active_courses.map((course) => (course.uid))
+    const announcements = await db.collection("announcements")
+    .find( { course_id: { $in: active_course_ids } } )
+    .project({ creator_name: 1, course_name: 1, title: 1, content: 1 }).sort({ date: -1 }).toArray()
+
 
     return {
       props: {
         user_data: JSON.parse(JSON.stringify(user_data)),
-        activities: JSON.parse(JSON.stringify(activities))
+        nowActivity,
+        activities: JSON.parse(JSON.stringify(activities)),
+        announcements: JSON.parse(JSON.stringify(announcements))
       },
     }
   }

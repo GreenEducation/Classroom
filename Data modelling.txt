@@ -36,7 +36,7 @@ courses {
   term
   creator_id
   staff: [
-    {name, role(course manager, instructor, other staff)}
+    {uid, name, role(course manager, instructor, other staff)}
   ]
   date_created
   university: {name, university_id}
@@ -63,11 +63,13 @@ activities {
   id
   uid
   name
-  type
+  type(reading, video, quiz, assignment, exam)
+  image_url
   module_id
   course_id
+  course_name
   file_url
-  file_type
+  file_type(image, pdf, RichText, video, youtube)
   description
   comments_id
   due_dates: []
@@ -102,14 +104,12 @@ course_profiles {
 student_activities {
   id
   uid
-  name
   activity_id
   course_id
   module_id
   due_dates
   status(incomplete, complete, expired)
   percent_completed
-  type
   grade
   student_id
   order
@@ -140,8 +140,8 @@ announcements {
   course_id
   course_name
   creator_id
-  creator_pic
   creator_name
+  title
   content
   date
   allow_comments
@@ -154,12 +154,10 @@ comments {
   course_id
   item_type (announcement, quiz, exam, assignment, lecture, reading)
   item_id
-
-  (if less than 100: embed, else reference)
   comments_array: [ post_id ]
 }
 
-post {
+posts {
   id
   uid
   creator_id
@@ -172,3 +170,21 @@ post {
   can_reply
   tag
 }
+
+
+
+//import AWS from 'aws-sdk'
+// Connecting to DigitalOcean using s3 sdk
+    /*const spacesEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com');
+    const s3 = new AWS.S3({
+        endpoint: spacesEndpoint,
+        accessKeyId: process.env.DO_SPACES_KEY,
+        secretAccessKey: process.env.DO_SPACES_SECRET
+    });
+
+    //Retrieving url for the desired image
+    const image_url = s3.getSignedUrl('getObject', {
+      Bucket: 'greened-users',
+      Key: 'cs.jpg',
+      Expires: 60 * 5
+    });*/
