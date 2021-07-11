@@ -67,9 +67,10 @@ export const getServerSideProps = withPageAuthRequired({
     const user_data = await db.collection("users")
       .findOne({ email: 'rayyanmaster@gmail.com' },
                { projection: {first_name: 1, account_type: 1, active_courses: 1} })
-    
+               
     // TODO: handle the case where there are no such activities
     // Querying activities based on the user's id
+    // TODO: change this to be sorted by due date (or something else, otherwise having multiple courses is an issue)
     const activities = await db.collection("student_activities").aggregate([
       { $match: { student_id: new ObjectId(user_data._id), status: "incomplete" } },
       { $sort: {order: 1} },

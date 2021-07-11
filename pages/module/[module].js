@@ -41,16 +41,24 @@ export default function Module({modules, due_soon, todo, activities}) {
             <progress id="course_progress" value={module_progress} max="100" style={{width: `100%`}}>
               {module_progress}%
             </progress>
-            <BigHero type={nextActivities[0].details[0].file_type} file_url={nextActivities[0].details[0].file_url} />
-            <div className={styles.upNext}>
-              <small>Up next</small>
-              <ActivityCard layout="horizontal" image={nextActivities[1].details[0].image_url}
-                main={nextActivities[1].details[0].name} mainUrl={`/activity/${nextActivities[1].activity_id}`}
-                sub={nextActivities[1].details[0].course_name} subUrl={`/course/${nextActivities[1].details[0].course_id}`}
-                duration={nextActivities[1].details[0].duration} />
-            </div><br />
+            {
+              nextActivities[0] ?
+              <BigHero type={nextActivities[0].details[0].file_type} file_url={nextActivities[0].details[0].file_url} />
+              : 'There are no activities in this module'
+            }
+            {
+              nextActivities[1] ?
+              <div className={styles.upNext}>
+                <small>Up next</small>
+                <ActivityCard layout="horizontal" image={nextActivities[1].details[0].image_url}
+                  main={nextActivities[1].details[0].name} mainUrl={`/activity/${nextActivities[1].activity_id}`}
+                  sub={nextActivities[1].details[0].course_name} subUrl={`/course/${nextActivities[1].details[0].course_id}`}
+                  duration={nextActivities[1].details[0].duration} />
+              </div>
+              : ''
+            }<br />
             <div className={styles.content}>
-              <small>Content for week 1</small>
+              <small>Content for {modules[0].name}</small>
               {
                 // The page is rendered first, and is later re-rendered with the db data
                 // So we need to have 'module?'. To make sure the function is only run when module is loaded
@@ -103,7 +111,7 @@ export async function getStaticProps({params}) {
 
   // Querying all activities based on the user's id and course_id
   const activities = await db.collection("student_activities").aggregate([
-    { $match: { student_id: new ObjectId("60d4c162ad30c9542761fecc"), module_id: module_id, status: "incomplete" } },
+    { $match: { student_id: new ObjectId("60d4c162ad30c9542761fecc"), module_id: module_id } },
     { $sort: {order: 1} },
     { 
       $lookup: {
@@ -133,15 +141,23 @@ export async function getStaticProps({params}) {
   ]).toArray()
   // Handles the case where the module is not found or user is not enrolled in the course
   if (!activities) return { notFound: true }
+  // Handles the case where there are no activities in the module
+  //if (activities.length===0) return { notFound: true }
 
 
   // Get all the modules in this course
-  const course_id = new ObjectId(activities[0].details[0].course_id)
+  const module = await db.collection("modules")
+    .findOne(
+      { _id: module_id },
+      { projection: { course_id: 1 }}
+    )
+  const course_id = new ObjectId(module.course_id)
   const course_profile = await db.collection("course_profiles")
     .findOne(
       { student_id: new ObjectId("60d4c162ad30c9542761fecc"), course_id: course_id },
       { projection: { modules: 1 }}
     )
+  // TODO: use aggregate retrieve course_id with needing 
 
 
   // Calculate the first and last day of this week

@@ -112,7 +112,13 @@ export async function getStaticProps({params}) {
 
   // Query details about the next activity
   const nextActivity = await db.collection("student_activities").aggregate([
-    { $match: { student_id: new ObjectId("60d4c162ad30c9542761fecc"), order: ++activity[0].order } },
+    { 
+      $match: {
+        student_id: new ObjectId("60d4c162ad30c9542761fecc"),
+        course_id: activity[0].details[0].course_id,
+        order: ++activity[0].order
+      }
+    },
     { 
       $lookup: {
       from: "activities",

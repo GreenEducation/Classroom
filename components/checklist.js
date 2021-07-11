@@ -35,10 +35,12 @@ export default function Checklist({ title, items=[] }) {
     <div className={styles.container}>
       <h6 className={styles.title}>{title}</h6>
       {
+        items.length!==0 ?
         items.map((item) => (
           <CheckListItem title={title} item={item.details[0].name} done={item.status=="complete"}
             id={item.activity_id} studentActId={item._id} />
         ))
+        : 'You do not have any items in this check list'
       }
     </div>
   )

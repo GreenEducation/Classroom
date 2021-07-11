@@ -19,13 +19,17 @@ export default function Course({ modules, activities, todo, due_soon, announceme
         <BigHero type={activities[0].details[0].file_type} file_url={activities[0].details[0].file_url} />
         <div className={styles.main}>
           <div className={styles.main__left}>
-            <div className={styles.upNext}>
-              <small>Up next</small>
-              <ActivityCard layout="horizontal" image={activities[1].details[0].image_url}
-                main={activities[1].details[0].name} mainUrl={`/activity/${activities[1].activity_id}`}
-                sub={activities[1].details[0].course_name} subUrl={`/course/${activities[1].details[0].course_id}`}
-                duration={activities[1].details[0].duration} />
-            </div>
+            {
+              activities[1] ?
+              <div className={styles.upNext}>
+                <small>Up next</small>
+                <ActivityCard layout="horizontal" image={activities[1].details[0].image_url}
+                  main={activities[1].details[0].name} mainUrl={`/activity/${activities[1].activity_id}`}
+                  sub={activities[1].details[0].course_name} subUrl={`/course/${activities[1].details[0].course_id}`}
+                  duration={activities[1].details[0].duration} />
+              </div>
+              : ''
+            }
             <div className={styles.announcement}>
               {
                 announcements?.map((announcement) => (
