@@ -52,6 +52,7 @@ modules {
   id
   uid
   name
+  course_id
   activities_list: [
     {name, uid}
   ]

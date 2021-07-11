@@ -21,7 +21,7 @@ export default function ActivityCard({ layout, image, main, sub, mainUrl="/", su
       <span>
         <Link href={mainUrl}><a><h6 className={styles.mainText}>{main}</h6></a></Link>
         <Link href={subUrl}><a><small>{sub}</small></a></Link>
-        <small> | Time: {duration}mins</small>
+        <small> | Time: {duration} mins</small>
       </span>
     </div>
   )
