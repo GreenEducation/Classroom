@@ -1,4 +1,4 @@
-import { withPageAuthRequired } from '@auth0/nextjs-auth0'
+import { withPageAuthRequired, getSession } from '@auth0/nextjs-auth0'
 import { ObjectId } from 'mongodb'
 import Head from 'next/head'
 import { connectToDatabase } from '../util/mongodb'
@@ -9,8 +9,6 @@ import ActivityCard from '../components/activity-card'
 import styles from './home.module.scss'
 
 /*TODO:
-if user is logged in:
-  get email from auth0
 Add a 'show more' button for announcements
 Add a calendar below or above the annoucements
 */
@@ -25,7 +23,11 @@ export default function Home({ user_data, nowActivity, activities, announcements
       </Head>
 
       <div className={styles.container}>
-        <BigHero type={nowActivity?.details[0].file_type} file_url={nowActivity.details[0].file_url} />
+        {
+          nowActivity.length===0 ?
+          <h5>You do not have any activities due</h5> :
+          <BigHero type={nowActivity?.details[0].file_type} file_url={nowActivity.details[0].file_url} />
+        }
         <div className={styles.topSection}>
           {activities?.map((activity) => (
             <ActivityCard image={activity.details[0].image_url} main={activity.details[0].name}
@@ -61,12 +63,24 @@ export const getServerSideProps = withPageAuthRequired({
   // Querying data and passing them as props
   async getServerSideProps(context) {
 
+    //Get user data from Auth0
+    const user_email = getSession(context.req).user.email
+
     const { db } = await connectToDatabase()
-    
     // Querying basic user data
     const user_data = await db.collection("users")
-      .findOne({ email: 'rayyanmaster@gmail.com' },
+      .findOne({ email: user_email },
                { projection: {first_name: 1, account_type: 1, active_courses: 1} })
+    
+    // Handling the case where the user has not finished the sign up process
+    if (!user_data) {
+      return {
+        redirect: {
+          destination: '/signup',
+          permanent: false,
+        },
+      }
+    }
                
     // TODO: handle the case where there are no such activities
     // Querying activities based on the user's id

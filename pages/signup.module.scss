@@ -1,0 +1,21 @@
+@use '../styles/variables' as *;
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+
+  &__main {
+    margin: 3rem 0;
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  justify-content: center;
+  align-items: flex-start;
+}
+
