@@ -85,3 +85,26 @@ hr {
   height: 17rem;
   max-height: 95vw;
 }
+
+
+/* Scrollbar */
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: $light-gray;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: $gray;
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: $black;
+}

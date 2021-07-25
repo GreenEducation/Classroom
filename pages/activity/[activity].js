@@ -1,3 +1,4 @@
+import { withPageAuthRequired, getSession } from '@auth0/nextjs-auth0'
 import Head from 'next/head'
 import { ObjectId } from 'mongodb'
 import { connectToDatabase } from '../../util/mongodb'
@@ -8,9 +9,19 @@ import Checklist from '../../components/checklist'
 import Comments from '../../components/comments'
 import styles from './activity.module.scss'
 
-export default function Activity({ modules, activity, nextActivity, comments, due_soon, todo, submissions }) {
+function Activity({ user_data, course_profile, activity, nextActivity, comments, due_soon, todo, submissions }) {
   return (
-    <Layout modules={modules}>
+    <Layout header={{
+        id: user_data._id,
+        first_name: user_data.first_name,
+        profile_pic: user_data.profile_pic
+      }}
+      sidebar={{
+        this_course: course_profile.course_id,
+        courses: user_data.active_courses,
+        modules: course_profile.modules
+      }}
+    >
       <Head>
         <title>{siteTitle}</title>
       </Head>
@@ -51,6 +62,9 @@ export default function Activity({ modules, activity, nextActivity, comments, du
   )
 }
 
+// Protecting the page. Must be signed in to access
+export default withPageAuthRequired(Activity)
+
 export async function getStaticPaths() {
 
   //{ fallback: blocking } will server-render pages
@@ -73,6 +87,11 @@ export async function getStaticProps({params}) {
   // Connect to DB and query using the passed activity_id
   const { db } = await connectToDatabase()
   const activity_id = new ObjectId(params.activity)
+
+  // Querying basic user data
+  const user_data = await db.collection("users")
+  .findOne({ email: 'rayyanmaster@gmail.com' },
+           { projection: {first_name: 1, profile_pic: 1, active_courses: 1} })
 
 
   //TODO: query hasComments and comments_id
@@ -102,6 +121,7 @@ export async function getStaticProps({params}) {
           file_type: 1,
           course_id: 1,
           module_id: 1,
+          comments_id: 1,
         }
       }
     }
@@ -153,7 +173,7 @@ export async function getStaticProps({params}) {
       student_id: new ObjectId("60d4c162ad30c9542761fecc"),
       course_id: new ObjectId(activity[0].details[0].course_id)
     },
-    { projection: { modules: 1 }}
+    { projection: { course_id: 1, modules: 1 }}
   )
 
 
@@ -251,10 +271,9 @@ export async function getStaticProps({params}) {
   ]).toArray()
 
 
-  //TODO: get comments_id from activities and query using that
   // Get the comments pointer for this activity
   const comments_head = await db.collection("comments").findOne(
-    { item_id: new ObjectId(activity[0].activity_id) },
+    { _id: new ObjectId(activity[0].details[0].comments_id) },
     { projection: { comments_array: 1 }}
   )
   // TODO: do an aggregation query and get user image and other details
@@ -267,13 +286,14 @@ export async function getStaticProps({params}) {
 
   return {
     props: {
-      modules: JSON.parse(JSON.stringify(course_profile)).modules,
-      activity: JSON.parse(JSON.stringify(activity)),
-      nextActivity: JSON.parse(JSON.stringify(nextActivity)),
-      comments: comments ? JSON.parse(JSON.stringify(comments)) : null,
-      due_soon: JSON.parse(JSON.stringify(due_soon)),
-      todo: JSON.parse(JSON.stringify(todo)),
-      submissions: JSON.parse(JSON.stringify(submissions))
+      user_data:      JSON.parse(JSON.stringify(user_data)),
+      course_profile: JSON.parse(JSON.stringify(course_profile)),
+      activity:       JSON.parse(JSON.stringify(activity)),
+      nextActivity:   JSON.parse(JSON.stringify(nextActivity)),
+      comments:       comments ? JSON.parse(JSON.stringify(comments)) : null,
+      due_soon:       JSON.parse(JSON.stringify(due_soon)),
+      todo:           JSON.parse(JSON.stringify(todo)),
+      submissions:    JSON.parse(JSON.stringify(submissions))
     },
     revalidate: 1 // re-render in 1 sec after every request
   }

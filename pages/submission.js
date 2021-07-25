@@ -1,4 +1,4 @@
-import { withPageAuthRequired } from '@auth0/nextjs-auth0'
+import { withPageAuthRequired, getSession } from '@auth0/nextjs-auth0'
 import Link from 'next/link'
 import Head from 'next/head'
 import { connectToDatabase } from '../util/mongodb'
@@ -7,9 +7,13 @@ import Card from '../components/card'
 import Table from '../components/table'
 import styles from './submission.module.scss'
 
-export default function Submission({activities_set}) {
+export default function Submission({user_data, activities_set}) {
   return (
-    <Layout>
+    <Layout header={{
+        id: user_data._id,
+        first_name: user_data.first_name,
+        profile_pic: user_data.profile_pic
+      }} courses={user_data.active_courses}>
       <Head>
         <title>{siteTitle}</title>
       </Head>
@@ -76,12 +80,15 @@ export const getServerSideProps = withPageAuthRequired({
   // Querying data and passing them as props
   async getServerSideProps(context) {
 
+    //Get user data from Auth0
+    const user_email = getSession(context.req).user.email
+
     const { db } = await connectToDatabase()
 
     // Querying basic user data
     const user_data = await db.collection("users")
-      .findOne({ email: 'rayyanmaster@gmail.com' },
-               { projection: {active_courses: 1} })
+      .findOne({ email: user_email },
+               { projection: {first_name: 1, profile_pic: 1, active_courses: 1} })
     
     // Querying activities based on the user's id
     const active_course_ids = user_data.active_courses.map((course) => (course.uid))
@@ -122,7 +129,8 @@ export const getServerSideProps = withPageAuthRequired({
 
     return {
       props: {
-        activities_set: JSON.parse(JSON.stringify(activities_set))
+        activities_set: JSON.parse(JSON.stringify(activities_set)),
+        user_data: JSON.parse(JSON.stringify(user_data))
       },
     }
   }

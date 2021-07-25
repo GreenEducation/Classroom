@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import styles from './layout.module.scss'
@@ -6,7 +7,9 @@ import Sidebar from './sidebar'
 
 export const siteTitle = 'GreenEd'
 
-export default function Layout({ children, header, courses, modules }) {
+export default function Layout({ children, header, sidebar }) {
+
+  const [showSidebar, setShowSidebar] = useState(true)
 
   return (
     <div className={styles.container}>
@@ -25,24 +28,44 @@ export default function Layout({ children, header, courses, modules }) {
         <meta name="og:title" content={siteTitle} />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
-      <Header name={header} />
-      <Sidebar>
-        {
-          courses?.map((course) => (
-            <Link href={`/course/${course.uid}`}>
-              <a>{course.name}</a>
-            </Link>
-          ))
-        }
-        {
-          modules?.map((module) => (
-            <Link href={`/module/${module.uid}`}>
-              <a>{module.name}</a>
-            </Link>
-          ))
-        }
-      </Sidebar>
-      <main className={styles.container__main}>{children}</main>
+      <Header user={header} showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
+      {
+        showSidebar &&
+        <Sidebar>
+          {
+            sidebar.this_course ?
+              <>
+              <select name="courses" id="courses" onChange={(e) => (location = e.target.value)}>
+                {
+                  sidebar.courses?.map((course) => (
+                    <option value={`/course/${course.uid}`} selected={sidebar.this_course==course.uid}>
+                      {course.name}
+                    </option>
+                  ))
+                }
+              </select>
+              <div>
+              {
+                sidebar.modules?.map((module) => (
+                  <Link href={`/module/${module.uid}`}>
+                    <a>{module.name}</a>
+                  </Link>
+                ))
+              }
+              </div>
+              </>
+            : sidebar.courses?.map((course) => (
+                <Link href={`/course/${course.uid}`}>
+                  <a>{course.name}</a>
+                </Link>
+              ))
+          }
+        </Sidebar>
+      }
+      <main className={styles.container__main}
+        style={ !showSidebar ? {marginLeft: 0} : {} }>
+        {children}
+      </main>
     </div>
   )
 }

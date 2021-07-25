@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import { withPageAuthRequired, getSession } from '@auth0/nextjs-auth0'
 import { ObjectId } from 'mongodb'
 import { connectToDatabase } from '../../util/mongodb'
 import Layout, { siteTitle } from '../../components/layout'
@@ -9,9 +10,18 @@ import Checklist from '../../components/checklist'
 import styles from './course.module.scss'
 
 
-export default function Course({ modules, activities, todo, due_soon, announcements }) {
+function Course({ user_data, course_profile, activities, todo, due_soon, announcements }) {
   return (
-    <Layout modules={modules}>
+    <Layout header={{
+        id: user_data._id,
+        first_name: user_data.first_name,
+        profile_pic: user_data.profile_pic
+      }}
+      sidebar={{
+        this_course: course_profile.course_id,
+        courses: user_data.active_courses,
+        modules: course_profile.modules
+      }}>
       <Head>
         <title>{siteTitle}</title>
       </Head>
@@ -52,6 +62,9 @@ export default function Course({ modules, activities, todo, due_soon, announceme
   )
 }
 
+// Protecting the page. Must be signed in to access
+export default withPageAuthRequired(Course)
+
 
 export async function getStaticPaths() {
   return {
@@ -66,16 +79,25 @@ export async function getStaticProps({params}) {
   const reg = /[0-9A-Fa-f]{24}/g
   if(!reg.test(params.course)) return { notFound: true }
 
+
+  // Get user data from Auth0 Session
+  //const user_email = getSession(req).user.email
+
   // Connect to DB and query using the passed course_id
   const { db } = await connectToDatabase()
   const course_id = new ObjectId(params.course)
+
+  // Querying basic user data
+  const user_data = await db.collection("users")
+  .findOne({ email: 'rayyanmaster@gmail.com' },
+           { projection: {first_name: 1, profile_pic: 1, active_courses: 1} })
 
 
   // Check if the user is enrolled in this course & get modules in the course
   const course_profile = await db.collection("course_profiles")
     .findOne(
       { student_id: new ObjectId("60d4c162ad30c9542761fecc"), course_id: course_id },
-      { projection: { modules: 1 }}
+      { projection: { course_id: 1, modules: 1 }}
     )
   // Handles the case where the user is not enrolled in this course
   // or the course is not found
@@ -172,7 +194,10 @@ export async function getStaticProps({params}) {
     },
     {
       $project: {
+        student_id: 1,
         activity_id: 1,
+        course_id: 1,
+        module_id: 1,
         percent_completed: 1,
         status: 1,
         details: { name: 1 }
@@ -190,11 +215,12 @@ export async function getStaticProps({params}) {
 
   return {
     props: {
-      modules: JSON.parse(JSON.stringify(course_profile)).modules,
-      activities: JSON.parse(JSON.stringify(activities)),
-      due_soon: JSON.parse(JSON.stringify(due_soon)),
-      todo: JSON.parse(JSON.stringify(todo)),
-      announcements: JSON.parse(JSON.stringify(announcements))
+      user_data:      JSON.parse(JSON.stringify(user_data)),
+      course_profile:        JSON.parse(JSON.stringify(course_profile)),
+      activities:     JSON.parse(JSON.stringify(activities)),
+      due_soon:       JSON.parse(JSON.stringify(due_soon)),
+      todo:           JSON.parse(JSON.stringify(todo)),
+      announcements:  JSON.parse(JSON.stringify(announcements))
     },
     revalidate: 1 // re-render in 1 sec after every request
   }

@@ -1,3 +1,4 @@
+import { withPageAuthRequired, getSession } from '@auth0/nextjs-auth0'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { ObjectId } from 'mongodb'
@@ -9,14 +10,14 @@ import Checklist from '../../components/checklist'
 import styles from './module.module.scss'
 
 
-export default function Module({modules, due_soon, todo, activities}) {
+function Module({user_data, course_profile, due_soon, todo, activities}) {
 
   // GET the module_id
   const router = useRouter()
   const { module:module_id } = router.query
 
   // Get the percent_completed of this module
-  const module_progress = modules.find((module) => (module.uid==module_id)).percent_completed
+  const module_progress = course_profile.modules.find((module) => (module.uid==module_id)).percent_completed
 
   // Get incomplete activities to display on 'next' and 'now'
   let nextActivities = activities.filter((activity) => (activity.status=="incomplete"))
@@ -30,7 +31,18 @@ export default function Module({modules, due_soon, todo, activities}) {
   ))
 
   return (
-    <Layout modules={modules}>
+    <Layout
+      header={{
+        id: user_data._id,
+        first_name: user_data.first_name,
+        profile_pic: user_data.profile_pic
+      }}
+      sidebar={{
+        this_course: course_profile.course_id,
+        courses: user_data.active_courses,
+        modules: course_profile.modules
+      }}
+    >
       <Head>
         <title>{siteTitle}</title>
       </Head>
@@ -58,7 +70,7 @@ export default function Module({modules, due_soon, todo, activities}) {
               : ''
             }<br />
             <div className={styles.content}>
-              <small>Content for {modules[0].name}</small>
+              <small>Content for {course_profile.modules[0].name}</small>
               {
                 // The page is rendered first, and is later re-rendered with the db data
                 // So we need to have 'module?'. To make sure the function is only run when module is loaded
@@ -84,6 +96,9 @@ export default function Module({modules, due_soon, todo, activities}) {
   )
 }
 
+// Protecting the page. Must be signed in to access
+export default withPageAuthRequired(Module)
+
 
 export async function getStaticPaths() {
 
@@ -104,14 +119,23 @@ export async function getStaticProps({params}) {
   const reg = /[0-9A-Fa-f]{24}/g
   if(!reg.test(params.module)) return { notFound: true }
 
+  //Get user data from Auth0
+  //TODO: get user data from auth0
+  //const user_email = getSession(context.req).user.email
+
   // Connect to DB and query using the passed module_id
   const { db } = await connectToDatabase()
   const module_id = new ObjectId(params.module)
   
+  // Querying basic user data
+  const user_data = await db.collection("users")
+  .findOne({ email: 'rayyanmaster@gmail.com' },
+           { projection: {first_name: 1, profile_pic: 1, active_courses: 1} })
+
 
   // Querying all activities based on the user's id and course_id
   const activities = await db.collection("student_activities").aggregate([
-    { $match: { student_id: new ObjectId("60d4c162ad30c9542761fecc"), module_id: module_id } },
+    { $match: { student_id: user_data._id, module_id: module_id } },
     { $sort: {order: 1} },
     { 
       $lookup: {
@@ -154,8 +178,8 @@ export async function getStaticProps({params}) {
   const course_id = new ObjectId(module.course_id)
   const course_profile = await db.collection("course_profiles")
     .findOne(
-      { student_id: new ObjectId("60d4c162ad30c9542761fecc"), course_id: course_id },
-      { projection: { modules: 1 }}
+      { student_id: user_data._id, course_id: course_id },
+      { projection: { course_id: 1, modules: 1 }}
     )
   // TODO: use aggregate retrieve course_id with needing 
 
@@ -171,7 +195,7 @@ export async function getStaticProps({params}) {
   // Get the activities due this week
   const due_soon = await db.collection("student_activities").aggregate([
     { $match: {
-      student_id: new ObjectId("60d4c162ad30c9542761fecc"),
+      student_id: user_data._id,
       course_id,
       due_dates: { $gte: firstday, $lte: lastday }
     }},
@@ -203,7 +227,7 @@ export async function getStaticProps({params}) {
   ))
   const todo = await db.collection("student_activities").aggregate([
     { $match: {
-      student_id: new ObjectId("60d4c162ad30c9542761fecc"),
+      student_id: user_data._id,
       module_id: new ObjectId(latest_module.uid)
     }},
     { $sort: {status: -1, order: 1} },
@@ -218,6 +242,8 @@ export async function getStaticProps({params}) {
     {
       $project: {
         activity_id: 1,
+        course_id: 1,
+        module_id: 1,
         percent_completed: 1,
         status: 1,
         details: { name: 1 }
@@ -229,7 +255,8 @@ export async function getStaticProps({params}) {
 
   return {
     props: {
-      modules:        JSON.parse(JSON.stringify(course_profile)).modules,
+      user_data:      JSON.parse(JSON.stringify(user_data)),
+      course_profile:        JSON.parse(JSON.stringify(course_profile)),
       due_soon:       JSON.parse(JSON.stringify(due_soon)),
       todo:           JSON.parse(JSON.stringify(todo)),
       activities:     JSON.parse(JSON.stringify(activities))
