@@ -18,6 +18,7 @@ export default withApiAuthRequired( async function handler(req, res) {
    * module id
    */
   //Use aggregate
+  /*
   const {matchedCount, modifiedCount} = await db.collection("course_profile").updateOne(
     {
       course_id: new ObjectId(req.body.id),
@@ -30,6 +31,7 @@ export default withApiAuthRequired( async function handler(req, res) {
       }
     }
   )
+  */
 
   res.json({matchedCount, modifiedCount})
 })
