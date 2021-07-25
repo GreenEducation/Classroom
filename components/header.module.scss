@@ -7,11 +7,12 @@
   position: fixed;
   background: $white;
   padding: 0 2rem;
-  height: 65px;
+  height: 60px;
   width: -moz-available;
   width: -webkit-fill-available;
   width: stretch;
   z-index: 999;
+  border-bottom: 1px solid #cccccc;
 
   &__left {
     display: flex;
@@ -24,12 +25,50 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    width: 30px;
-    height: 25px;
+    width: 25px;
+    height: 20px;
     margin-right: 10px;
+    cursor: pointer;
 
     span {
       border: 1px solid $black;
     }
+  }
+
+  &__right {
+    display: flex;
+    flex-direction: column;
+    align-self: flex-start;
+    align-items: flex-end;
+  }
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  height: 60px;
+  position: absolute;
+
+  &__pic {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: $white;
+    position: relative;
+    overflow: hidden;
+    margin: 0.5rem 0;
+  }
+
+  &__dropdown {
+    margin-top: 60px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-self: flex-end;
+    background: $white;
+    border-width: 0 1px 1px 1px;
+    border-color: #cccccc;
+    border-style: solid;
   }
 }

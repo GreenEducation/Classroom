@@ -1,7 +1,7 @@
 @use '../styles/variables' as *;
 
 .sidebar {
-  margin: 65px 0 0 0;
+  margin: 60px 0 0 0;
   width: 12rem;
   height: 100vh;
   background: $white;
@@ -16,8 +16,44 @@
     display: flex;
     flex-direction: column;
     max-height: 35vh;
-    overflow-y: auto;
     width: 100%;
+
+    > select {
+      outline: 0;
+      width: fit-content;
+      font-size: $p-font-size;
+      border-radius: 0.75rem;
+      font-family: $font-family;
+      align-self: center;
+      margin-bottom: 1rem;
+    }
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    /* width */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+      background: $light-gray;
+    }
+
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+      background: $gray;
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+      background: $black;
+    }
+
   }
 
   &__link, a {

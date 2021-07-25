@@ -2,17 +2,17 @@ https://www.mongodb.com/basics/embedded-mongodb
 https://www.mongodb.com/blog/post/6-rules-of-thumb-for-mongodb-schema-design-part-3
 
 users {
+  _id
   id
-  uid
   first_name
   last_name
-  preferred_name
+  preferred_name??
   email
   phone
   school
   date_of_birth
-  notifications
   date_created
+  notifications
   google_account
   facebook_account
   twitter_account
@@ -23,8 +23,8 @@ users {
 }
 
 courses {
+  _id
   id
-  uid
   name
   course_id (uni's id)
   category
@@ -49,8 +49,8 @@ courses {
 }
 
 modules {
+  _id
   id
-  uid
   name
   course_id
   activities_list: [
@@ -61,10 +61,10 @@ modules {
 }
 
 activities {
+  _id
   id
-  uid
   name
-  type(reading, video, quiz, assignment, exam)
+  activity_type(reading, video, quiz, assignment, exam)
   image_url
   module_id
   course_id
@@ -87,15 +87,15 @@ activities {
 }
 
 course_profiles {
+  _id
   id
-  uid
   course_name
   course_id
   student_id
   student_name
   date_joined
   modules_list: [ <100
-    { uid, name, percent_completed }
+    { uid, name, percent_completed, total_activities, completed_activities }
   ]
   grade: [ <100
     { id, activity_id, name, type, grade, final_percentage}
@@ -103,14 +103,15 @@ course_profiles {
 }
 
 student_activities {
+  _id
   id
-  uid
   activity_id
   course_id
   module_id
-  due_dates
+  due_dates: [date1, date2]
   status(incomplete, complete, expired)
   percent_completed
+  activity_type
   grade
   student_id
   order
@@ -136,8 +137,8 @@ student_activities {
 }
 
 announcements {
+  _id
   id
-  uid
   course_id
   course_name
   creator_id
@@ -150,8 +151,8 @@ announcements {
 }
 
 comments {
+  _id
   id
-  uid
   course_id
   item_type (announcement, quiz, exam, assignment, lecture, reading)
   item_id
@@ -159,8 +160,8 @@ comments {
 }
 
 posts {
+  _id
   id
-  uid
   creator_id
   creator_name
   up_votes

@@ -4,8 +4,46 @@ import { connectToDatabase } from '../util/mongodb'
 import Header from '../components/header' 
 import styles from './signup.module.scss'
 
+/*
+TODO:
+Style the form
+Send api request
+redirect to home on success
+*/
 
 export default function SignUp({ user_email }) {
+
+  //TODO: change the url to greened.app
+  const submitForm = async (event) => {
+    event.preventDefault()
+
+    const res = await fetch('http://localhost:3000/api/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(
+        {
+          id: 0,
+          first_name: event.target.firstName.value,
+          last_name: event.target.lastName.value,
+          email: user_email,
+          phone: '',
+          school: '',
+          profile_pic: 'https://greened-users.nyc3.digitaloceanspaces.com/user.png',
+          date_of_birth: event.target.birthday.value,
+          date_created: new Date().toISOString(),
+          notifications: [],
+          active_course: [],
+          archived_courses: [],
+          account_type: event.target.accountType.value,
+          deleted: false
+        }
+      )
+    })
+
+    console.log(res.json())
+  }
 
   return (
     <div className={styles.container}>
@@ -14,26 +52,28 @@ export default function SignUp({ user_email }) {
       </Head>
       <Header />
       <div className={styles.container__main}>
+
         <h5>{new Date().toDateString()}</h5>
         <p>The day you changed your life</p>
-        <form className={styles.form}>
-          <label for="first-name">First Name</label>
-          <input type="text" id="first-name" placeholder="First Name" />
+
+        <form className={styles.form} onSubmit={submitForm}>
+          <label htmlFor="first-name">First Name</label>
+          <input type="text" id="first-name" name="firstName" placeholder="First Name" required />
           <br />
 
-          <label for="last-name">Last Name:</label>
-          <input type="text" id="last-name" placeholder="Last Name" />
+          <label htmlFor="last-name">Last Name:</label>
+          <input type="text" id="last-name" name="lastName" placeholder="Last Name" required />
           <br />
 
-          <label for="account-type">Account Type:</label>
-          <select name="account-type" id="account-type">
+          <label htmlFor="account-type">Account Type:</label>
+          <select name="account-type" id="accountType" required>
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
           </select>
           <br />
 
-          <label for="birthday">Birthday:</label>
-          <input type="date" id="birthday" name="birthday" />
+          <label htmlFor="birthday">Birthday:</label>
+          <input type="date" id="birthday" name="birthday" required />
           <br />
 
           <input type="submit" value="Submit" />

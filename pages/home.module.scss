@@ -17,3 +17,23 @@
     margin: 0.25rem 0.5rem 0.5rem 0.5rem;
   }
 }
+
+.addCourse {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  button {
+    outline: 0;
+    border: 1px solid $black;
+    border-radius: 50%;
+    text-align: center;
+    padding: auto;
+    margin: 0.5rem;
+    height: 50px;
+    width: 50px;
+    font-size: 2em;
+    background: $white;
+  }
+}
