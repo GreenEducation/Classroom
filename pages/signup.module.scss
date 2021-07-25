@@ -17,21 +17,22 @@
   padding: 1rem;
   justify-content: center;
   align-items: flex-start;
-}
 
-input[type=text] {
-  outline: 0;
-  margin: 0.5rem;
-  padding: 0.5rem;
-  min-width: 10vw;
-  width: 250px;
-  max-width: 90vw;
-  height: 25px;
-  border: 1px solid $gray;
-  color: $color;
-  font-family: $font-family;
-  line-height: 1.6;
-  font-size: 1rem;
-  font-weight: 400;
-  font-size: $p-font-size !important;
+  input[type=text] {
+    outline: 0;
+    margin: 0.5rem;
+    padding: 0.5rem;
+    min-width: 10vw;
+    width: 250px;
+    max-width: 90vw;
+    height: 25px;
+    border: 1px solid $gray;
+    color: $color;
+    font-family: $font-family;
+    line-height: 1.6;
+    font-size: 1rem;
+    font-weight: 400;
+    font-size: $p-font-size !important;
+  }
+  
 }
