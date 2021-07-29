@@ -41,7 +41,7 @@ export default function Index() {
 
         <div className={styles.row}>
           <span style={{ position:  `relative` }}>
-            <Image src="/images/home screenshot.png" layout="fill" alt="algorithms on a paper" objectFit="contain"/>
+            <Image src="/images/home-screenshot.png" layout="fill" alt="algorithms on a paper" objectFit="contain"/>
           </span>
           <span>
             <h2>Surfaces your next tasks</h2>
@@ -55,13 +55,13 @@ export default function Index() {
             <p>You can comment and ask questions right under lectures and assignments.</p>
           </span>
           <span style={{ position:  `relative` }}>
-            <Image src="/images/comments screenshot.png" layout="fill" alt="algorithms on a paper" objectFit="contain"/>
+            <Image src="/images/comments-screenshot.png" layout="fill" alt="algorithms on a paper" objectFit="contain"/>
           </span>
         </div>
 
         <div className={styles.row}>
           <span style={{ position:  `relative` }}>
-            <Image src="/images/notifications screenshot.png" layout="fill" alt="algorithms on a paper" objectFit="contain"/>
+            <Image src="/images/notifications-screenshot.png" layout="fill" alt="algorithms on a paper" objectFit="contain"/>
           </span>
           <span>
             <h2>Get regular reminders</h2>
