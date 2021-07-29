@@ -1,4 +1,4 @@
-import { useUser } from '@auth0/nextjs-auth0'
+import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
 import styles from './index.module.scss'
@@ -20,6 +20,10 @@ export default function Index() {
 
   return (
     <div className={styles.container}>
+      <Head>
+        <title>Green Education</title>
+      </Head>
+
       <Header />
       <div className={styles.body}>
 
@@ -34,13 +38,13 @@ export default function Index() {
             <h2>Auto generates todo list</h2>
             <p>GreenEd processes your courses, breaks down your tasks into smaller chunks, and automatically generates a todo list. Thereby removing the overhead.</p>
           </span>
-          <span style={{ position:  `relative` }}>
+          <span className={styles.row__img}>
             <Image src="/images/todo.png" layout="fill" alt="algorithms on a paper" objectFit="contain"/>
           </span>
         </div>
 
         <div className={styles.row}>
-          <span style={{ position:  `relative` }}>
+          <span className={styles.row__img}>
             <Image src="/images/home-screenshot.png" layout="fill" alt="algorithms on a paper" objectFit="contain"/>
           </span>
           <span>
@@ -54,13 +58,13 @@ export default function Index() {
             <h2>Comment under activities</h2>
             <p>You can comment and ask questions right under lectures and assignments.</p>
           </span>
-          <span style={{ position:  `relative` }}>
+          <span className={styles.row__img}>
             <Image src="/images/comments-screenshot.png" layout="fill" alt="algorithms on a paper" objectFit="contain"/>
           </span>
         </div>
 
         <div className={styles.row}>
-          <span style={{ position:  `relative` }}>
+          <span className={styles.row__img}>
             <Image src="/images/notifications-screenshot.png" layout="fill" alt="algorithms on a paper" objectFit="contain"/>
           </span>
           <span>
