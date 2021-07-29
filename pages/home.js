@@ -56,7 +56,7 @@ export default function Home({ user_data, nowActivity, activities, announcements
           ))
         }
 
-        <div class={styles.addCourse}>
+        <div className={styles.addCourse}>
           <button>+</button>
           <p>Add a course</p>
         </div>
