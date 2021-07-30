@@ -1,6 +1,7 @@
 import { withPageAuthRequired, getSession } from '@auth0/nextjs-auth0'
 import { ObjectId } from 'mongodb'
 import Head from 'next/head'
+import Link from 'next/link'
 import { connectToDatabase } from '../util/mongodb'
 import Layout, { siteTitle } from '../components/layout'
 import BigHero from '../components/big-hero'
@@ -57,8 +58,12 @@ export default function Home({ user_data, nowActivity, activities, announcements
         }
 
         <div className={styles.addCourse}>
-          <button>+</button>
-          <p>Add a course</p>
+          <Link href="/add-course">
+            <button>+</button>
+          </Link>
+          <Link href="/add-course">
+            <p>Add a course</p>
+          </Link>
         </div>
       </div>
 
@@ -93,6 +98,8 @@ export const getServerSideProps = withPageAuthRequired({
         },
       }
     }
+
+    console.log(user_data.profile_pic)
 
 
     // Querying activities based on the user's id

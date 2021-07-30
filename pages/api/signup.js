@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       email: req.body.email,
       phone: req.body.phone,
       school: req.body.school,
-      profile: req.body.profile_pic,
+      profile_pic: req.body.profile_pic,
       date_of_birth: new Date(req.body.date_of_birth),
       date_created: new Date(req.body.date_created),
       notifications: req.body.notifications,

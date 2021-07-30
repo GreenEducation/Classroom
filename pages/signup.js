@@ -1,7 +1,7 @@
 import { withPageAuthRequired, getSession } from '@auth0/nextjs-auth0';
 import Head from 'next/head'
+import Link from 'next/link'
 import { connectToDatabase } from '../util/mongodb'
-import Header from '../components/header' 
 import styles from './signup.module.scss'
 
 /*
@@ -10,6 +10,19 @@ Style the form
 Send api request
 redirect to home on success
 */
+
+function Header() {
+  return (
+    <div className={styles.header}>
+      <span className={styles.header__left}>
+        <Link href="/"><a><h6>Green<b>Ed</b></h6></a></Link>
+      </span>
+      <span className={styles.header__right}>
+      </span>
+    </div>
+  )
+}
+
 
 export default function SignUp({ user_email }) {
 
@@ -42,7 +55,7 @@ export default function SignUp({ user_email }) {
       )
     })
 
-    console.log(res.json())
+    window.location.href = "home"
   }
 
   return (
@@ -53,30 +66,30 @@ export default function SignUp({ user_email }) {
       <Header />
       <div className={styles.container__main}>
 
-        <h5>{new Date().toDateString()}</h5>
-        <p>The day you changed your life</p>
-
+        <h5>Sign Up</h5>
         <form className={styles.form} onSubmit={submitForm}>
           <label htmlFor="first-name">First Name</label>
-          <input type="text" id="first-name" name="firstName" placeholder="First Name" required />
+          <input type="text" id="first-name" name="firstName" className={styles.input}
+            placeholder="First Name" required />
           <br />
 
           <label htmlFor="last-name">Last Name:</label>
-          <input type="text" id="last-name" name="lastName" placeholder="Last Name" required />
+          <input type="text" id="last-name" name="lastName" className={styles.input}
+            placeholder="Last Name" required />
           <br />
 
           <label htmlFor="account-type">Account Type:</label>
-          <select name="account-type" id="accountType" required>
+          <select name="account-type" id="accountType" className={styles.input + ' ' + styles.select} required>
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
           </select>
           <br />
 
           <label htmlFor="birthday">Birthday:</label>
-          <input type="date" id="birthday" name="birthday" required />
+          <input type="date" id="birthday" name="birthday" className={styles.input} required />
           <br />
 
-          <input type="submit" value="Submit" />
+          <input type="submit" value="Submit" className={styles.input + ' ' + styles.button}  />
         </form>
 
       </div>
