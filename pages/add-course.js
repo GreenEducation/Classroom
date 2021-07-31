@@ -56,7 +56,7 @@ export default function AddCourse({ user_data }) {
       </Head>
       <div className={styles.container}>
         <h5>Add a Course</h5>
-        <input id="file_upload" type="file" accept="image/*" />
+        <input id="file_upload" type="file"/>
         <button id="upload" onClick={(event) => {event.preventDefault; uploadFile()}}>Upload</button>
         <p id="message"></p>
       </div>

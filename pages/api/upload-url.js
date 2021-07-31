@@ -22,9 +22,9 @@ export default async function handler(req, res) {
       key: req.query.file,
     },
     Expires: 60, // seconds
-    Conditions: [
-      ['content-length-range', 0, 2097152], // up to 2 MB
-    ],
+    //Conditions: [
+    //  ['content-length-range', 0, 2097152], // up to 2 MB
+    //],
   });
 
   //Record the upload to the DB
