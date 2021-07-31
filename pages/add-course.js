@@ -18,8 +18,6 @@ export default function AddCourse({ user_data }) {
     }
     var file = files[0]
 
-    //TODO: this is also recording the upload in DB
-    // Maybe use another fetch call for that?
     const res = await fetch(`/api/upload-url?file=${file.name + new Date().toISOString()}&user=${user_data._id}`);
     const { url, fields } = await res.json();
     const formData = new FormData();
@@ -34,7 +32,9 @@ export default function AddCourse({ user_data }) {
     });
 
     if (upload.ok) {
-      console.log('Uploaded successfully!');
+      console.log('Uploaded successfully!')
+      document.getElementById("file_upload").value = ""
+      document.getElementById("message").innerHTML = "Uploaded successfully!"
     } else {
       console.error('Upload failed.');
     }
@@ -58,6 +58,7 @@ export default function AddCourse({ user_data }) {
         <h5>Add a Course</h5>
         <input id="file_upload" type="file" accept="image/*" />
         <button id="upload" onClick={(event) => {event.preventDefault; uploadFile()}}>Upload</button>
+        <p id="message"></p>
       </div>
     </Layout>
   )
