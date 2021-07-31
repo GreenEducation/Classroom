@@ -24,6 +24,21 @@ export default function AddCourse({ user_data }) {
     var file = files[0]
     console.log(file.name)
 
+    var params = {
+      Bucket: "greened-users",
+      Key: file.name,
+      Body: file,
+      ACL: "private"
+    };
+    
+    s3.putObject(params, function(err, data) {
+      if (err) {console.log(err, err.stack);}
+      else     {console.log(data);}
+    });
+
+    
+
+    /*
     // Use S3 ManagedUpload class as it supports multipart uploads
     var upload = new AWS.S3.ManagedUpload({
       params: {
@@ -42,21 +57,6 @@ export default function AddCourse({ user_data }) {
         return alert("There was an error uploading your photo: ", err.message)
       }
     )
-
-    
-
-    /*
-    var params = {
-      Bucket: "greened-users",
-      Key: file.name,
-      Body: file,
-      ACL: "private"
-    };
-    
-    s3.putObject(params, function(err, data) {
-      if (err) {console.log(err, err.stack);}
-      else     {console.log(data);}
-    });
     */
   }
 

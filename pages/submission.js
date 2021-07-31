@@ -10,10 +10,14 @@ import styles from './submission.module.scss'
 export default function Submission({user_data, activities_set}) {
   return (
     <Layout header={{
-        id: user_data._id,
-        first_name: user_data.first_name,
-        profile_pic: user_data.profile_pic
-      }} courses={user_data.active_courses}>
+      id: user_data._id,
+      first_name: user_data.first_name,
+      profile_pic: user_data.profile_pic
+    }}
+    sidebar={{
+      this_course: null,
+      courses: user_data.active_courses
+    }}>
       <Head>
         <title>{siteTitle}</title>
       </Head>

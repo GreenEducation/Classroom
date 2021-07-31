@@ -10,3 +10,8 @@ SELECT next from course where course_id=maths
 SELECT activities from modules where module_id=week1
 
 SELECT activity from module where module_id=week1 AND status=incomplete AND order ASC
+
+
+BLACKBOARD_APP_KEY='e235a436-bc7c-444c-9095-eab8e44084d5'
+BLACKBOARD_SECRET='mQcDhRLE640VOiHuq9PxzF9rPPQslpGc'
+BLACKBOARD_APP_ID='4c926f64-cb10-4407-a16b-d6ce62b97d24'

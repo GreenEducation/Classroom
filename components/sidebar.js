@@ -5,7 +5,12 @@ export default function Sidebar({ children }) {
   return (
     <div className={styles.sidebar}>
       <span className={styles.sidebar__top}>
-      { children!='' ? children : 'You are not enrolled in any courses' }
+      { children!='' ? children
+      : <span>
+          You are not enrolled in any courses.<br />
+          <Link href="/add-course">+ Add a Course</Link>
+        </span>
+      }
       </span>
       <hr />
       <Link href="/chat"><a className={styles.sidebar__link}>Chat</a></Link>
