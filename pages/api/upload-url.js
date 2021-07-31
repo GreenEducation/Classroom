@@ -1,11 +1,13 @@
 import AWS from 'aws-sdk';
 
 export default async function handler(req, res) {
+  const spacesEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com')
   AWS.config.update({
     accessKeyId: process.env.DO_SPACES_KEY,
     secretAccessKey: process.env.DO_SPACES_SECRET,
     region: 'nyc3',
     signatureVersion: 'v4',
+    endpoint: spacesEndpoint,
   });
 
   const s3 = new AWS.S3();
@@ -25,7 +27,7 @@ export default async function handler(req, res) {
 
 
 /*
-const spacesEndpoint = new AWS.Endpoint('https://greened-users.nyc3.digitaloceanspaces.com');
+const spacesEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com');
 AWS.config.update({
   accessKeyId: process.env.DO_SPACES_KEY,
   secretAccessKey: process.env.DO_SPACES_SECRET,

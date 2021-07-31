@@ -3,7 +3,6 @@ import Head from 'next/head'
 import Layout, { siteTitle } from '../components/layout'
 import { connectToDatabase } from '../util/mongodb'
 import styles from './settings.module.scss'
-const AWS = require('aws-sdk');
 
 /**
  * Send the file name to a local api
@@ -19,7 +18,6 @@ export default function AddCourse({ user_data }) {
       return alert("Please choose a file to upload first.")
     }
     var file = files[0]
-    console.log(file.name)
 
     const res = await fetch(`/api/upload-url?file=${file.name}`);
     const { url, fields } = await res.json();
@@ -29,7 +27,6 @@ export default function AddCourse({ user_data }) {
       formData.append(key, value);
     });
 
-    console.log(url)
     const upload = await fetch(url, {
       method: 'POST',
       body: formData,
