@@ -1,6 +1,10 @@
+//https://github.com/leerob/nextjs-aws-s3/blob/main/bin/hello-cdk.js
 import AWS from 'aws-sdk';
+import { connectToDatabase } from "../../util/mongodb";
 
 export default async function handler(req, res) {
+
+  //Configure AWS
   const spacesEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com')
   AWS.config.update({
     accessKeyId: process.env.DO_SPACES_KEY,
@@ -10,6 +14,7 @@ export default async function handler(req, res) {
     endpoint: spacesEndpoint,
   });
 
+  //Get a Presigned link to send a POST request to
   const s3 = new AWS.S3();
   const post = await s3.createPresignedPost({
     Bucket: 'greened-users',
@@ -21,6 +26,17 @@ export default async function handler(req, res) {
       ['content-length-range', 0, 2097152], // up to 2 MB
     ],
   });
+
+  //Record the upload to the DB
+  const { db } = await connectToDatabase()
+  db.collection("file_upload").insertOne(
+    {
+      user_id: req.query.user,
+      file_url: 'https://greened-users.nyc3.digitaloceanspaces.com/' + req.query.file,
+      file_type: 'Course',
+      upload_time: new Date().toISOString()
+    }
+  )
 
   res.status(200).json(post);
 }
