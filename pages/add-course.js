@@ -18,7 +18,7 @@ export default function AddCourse({ user_data }) {
     }
     var file = files[0]
 
-    const res = await fetch(`/api/upload-url?file=${file.name + new Date().toISOString()}&user=${user_data._id}`);
+    const res = await fetch(`/api/upload-url?file=${new Date().toISOString() + file.name}&user=${user_data._id}`);
     const { url, fields } = await res.json();
     const formData = new FormData();
 
