@@ -80,7 +80,7 @@ export default function SignUp({ user_email }) {
           <label htmlFor="account-type">Account Type:</label>
           <select name="account-type" id="accountType" className={styles.input + ' ' + styles.select} required>
             <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
+            <option value="teacher" disabled>Teacher</option>
           </select>
           <br />
 
