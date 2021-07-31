@@ -26,11 +26,10 @@ function Header() {
 
 export default function SignUp({ user_email }) {
 
-  //TODO: change the url to greened.app
   const submitForm = async (event) => {
     event.preventDefault()
 
-    const res = await fetch('http://localhost:3000/api/signup', {
+    const res = await fetch('http://www.greened.app/api/signup', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
