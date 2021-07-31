@@ -26,6 +26,7 @@ export default function AddCourse({ user_data }) {
       formData.append(key, value);
     });
 
+    document.getElementById("message").innerHTML = "Uploading..."
     const upload = await fetch(url, {
       method: 'POST',
       body: formData,
