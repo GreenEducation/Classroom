@@ -29,7 +29,7 @@ export default function SignUp({ user_email }) {
   const submitForm = async (event) => {
     event.preventDefault()
 
-    const res = await fetch('http://www.greened.app/api/signup', {
+    const res = await fetch('https://www.greened.app/api/signup', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
