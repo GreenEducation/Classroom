@@ -5,9 +5,8 @@ import { connectToDatabase } from '../util/mongodb'
 import styles from './settings.module.scss'
 
 /**
- * Send the file name to a local api
- * Use createPresignedPost to get a link
- *  to upload the file directly from the HTML form
+ * create a unique file name
+ * save information in db
  */
 export default function AddCourse({ user_data }) {
 
@@ -19,7 +18,9 @@ export default function AddCourse({ user_data }) {
     }
     var file = files[0]
 
-    const res = await fetch(`/api/upload-url?file=${file.name}`);
+    //TODO: this is also recording the upload in DB
+    // Maybe use another fetch call for that?
+    const res = await fetch(`/api/upload-url?file=${file.name}&user=${user_data._id}`);
     const { url, fields } = await res.json();
     const formData = new FormData();
 
