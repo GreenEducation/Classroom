@@ -20,7 +20,7 @@ export default function AddCourse({ user_data }) {
 
     //TODO: this is also recording the upload in DB
     // Maybe use another fetch call for that?
-    const res = await fetch(`/api/upload-url?file=${file.name}&user=${user_data._id}`);
+    const res = await fetch(`/api/upload-url?file=${file.name + new Date().toISOString()}&user=${user_data._id}`);
     const { url, fields } = await res.json();
     const formData = new FormData();
 
