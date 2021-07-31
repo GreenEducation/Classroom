@@ -5,17 +5,14 @@ import { connectToDatabase } from '../util/mongodb'
 import styles from './settings.module.scss'
 const AWS = require('aws-sdk');
 
-
+/**
+ * Send the file name to a local api
+ * Use createPresignedPost to get a link
+ *  to upload the file directly from the HTML form
+ */
 export default function AddCourse({ user_data }) {
 
-  const spacesEndpoint = new AWS.Endpoint('https://greened-users.nyc3.digitaloceanspaces.com');
-  const s3 = new AWS.S3({
-      endpoint: spacesEndpoint,
-      accessKeyId: process.env.DO_SPACES_KEY,
-      secretAccessKey: process.env.DO_SPACES_SECRET,
-  });
-
-  function uploadFile() {
+  async function uploadFile() {
 
     var files = document.getElementById("file_upload").files
     if (!files.length) {
@@ -24,40 +21,25 @@ export default function AddCourse({ user_data }) {
     var file = files[0]
     console.log(file.name)
 
-    var params = {
-      Bucket: "greened-users",
-      Key: file.name,
-      Body: file,
-      ACL: "private"
-    };
-    
-    s3.putObject(params, function(err, data) {
-      if (err) {console.log(err, err.stack);}
-      else     {console.log(data);}
+    const res = await fetch(`/api/upload-url?file=${file.name}`);
+    const { url, fields } = await res.json();
+    const formData = new FormData();
+
+    Object.entries({ ...fields, file }).forEach(([key, value]) => {
+      formData.append(key, value);
     });
 
-    
+    console.log(url)
+    const upload = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
 
-    /*
-    // Use S3 ManagedUpload class as it supports multipart uploads
-    var upload = new AWS.S3.ManagedUpload({
-      params: {
-        Bucket: "greened-users",
-        Key: file.name,
-        Body: file
-      }
-    })
-
-    var promise = upload.promise()
-    promise.then(
-      function(data) {
-        alert("Successfully uploaded photo.")
-      },
-      function(err) {
-        return alert("There was an error uploading your photo: ", err.message)
-      }
-    )
-    */
+    if (upload.ok) {
+      console.log('Uploaded successfully!');
+    } else {
+      console.error('Upload failed.');
+    }
   }
 
 
