@@ -1,4 +1,4 @@
-import { withPageAuthRequired, getSession } from '@auth0/nextjs-auth0'
+import { withPageAuthRequired } from '@auth0/nextjs-auth0'
 import Head from 'next/head'
 import { ObjectId } from 'mongodb'
 import { connectToDatabase } from '../../util/mongodb'
@@ -78,11 +78,14 @@ export async function getStaticPaths() {
 }
 
 // Runs both on the server and client
-export async function getStaticProps({params}) {
+export async function getStaticProps(context) {
+
+  const {params} = context
 
   // GET request must be a hexa string of length 24
   const reg = /[0-9A-Fa-f]{24}/g
   if(!reg.test(params.activity)) return { notFound: true }
+
 
   // Connect to DB and query using the passed activity_id
   const { db } = await connectToDatabase()
