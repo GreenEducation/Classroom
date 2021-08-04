@@ -1,124 +1,29 @@
-import React, { useEffect } from 'react'
-import { withPageAuthRequired } from '@auth0/nextjs-auth0'
-import Head from 'next/head'
-import { useRouter } from 'next/router'
 import { ObjectId } from 'mongodb'
-import { connectToDatabase } from '../../util/mongodb'
-import Layout, { siteTitle } from '../../components/layout'
-import BigHero from '../../components/big-hero'
-import ActivityCard from '../../components/activity-card'
-import Checklist from '../../components/checklist'
-import Comments from '../../components/comments'
-import styles from './activity.module.scss'
+import { withApiAuthRequired, getSession } from '@auth0/nextjs-auth0'
+import { connectToDatabase } from "../../util/mongodb"
 
-function Activity({ activity_id, user_data, course_profile, activity, nextActivity, comments, due_soon, todo, submissions }) {
-
-  //Store GET url string
-  const router = useRouter()
-  const { act_id } = router.query
-
-  useEffect(() => {
-      
-    activity_id = act_id
-    console.log(act_id)
-
-  }, [act_id])
-
-  return (
-    <Layout header={{
-        id: user_data._id,
-        first_name: user_data.first_name,
-        profile_pic: user_data.profile_pic
-      }}
-      sidebar={{
-        this_course: course_profile.course_id,
-        courses: user_data.active_courses,
-        modules: course_profile.modules
-      }}
-    >
-      <Head>
-        <title>{siteTitle}</title>
-      </Head>
-      <div className={styles.container}>
-        <div className={styles.main}>
-          <div className={styles.main__left}>
-            <progress id="activity_progress" value={activity[0].percent_completed} max="100" style={{width: `100%`}}>
-              {activity[0].percent_completed}%
-            </progress>
-            <BigHero type={activity[0].details[0].file_type} file_url={activity[0].details[0].file_url} />
-            {
-              (nextActivity.length!=0) ?
-              <div className={styles.upNext}>
-                <small>Up next</small>
-                {activity_id}
-                <ActivityCard layout="horizontal" image={nextActivity[0].details[0].image_url}
-                  main={nextActivity[0].details[0].name} mainUrl={`/activity/${nextActivity[0].activity_id}`}
-                  sub={nextActivity[0].details[0].course_name} subUrl={`/course/${nextActivity[0].details[0].course_id}`}
-                  duration={nextActivity[0].details[0].duration} />
-              </div>
-              : ''
-            }
-            <br />
-            {
-              comments ?
-                <Comments user={{'image': 'https://greened-users.nyc3.digitaloceanspaces.com/user.png'}}
-                  comments={comments} />
-                : ''
-            }
-          </div>
-          <div className={styles.main__right}>
-            <Checklist title="Submissions" items={submissions} />
-            <Checklist title="Due this week" items={due_soon} />
-            <Checklist title="To Do" items={todo} />
-          </div>
-        </div>
-      </div>
-    </Layout>
-  )
-}
-
-// Protecting the page. Must be signed in to access
-export default withPageAuthRequired(Activity)
-
-export async function getStaticPaths() {
-
-  //{ fallback: blocking } will server-render pages
-  // on-demand if the path doesn't exist.
-  //{ fallback: true } will server-render blank pages
-  // for every request and fill them with data on-demand
-  return {
-    paths: [],
-    fallback: 'blocking'
-  }
-}
-
-// Runs both on the server and client
-export async function getStaticProps(context) {
-
-  const {params} = context
-
+export default withApiAuthRequired( async function handler(req, res) {
+  
   // GET request must be a hexa string of length 24
   const reg = /[0-9A-Fa-f]{24}/g
-  if(!reg.test(params.activity)) return { notFound: true }
+  if(!reg.test(req.body.act_id)) return { /*TODO: redirect*/notFound: true }
 
-  //Get user data from Auth0
-  const { GetSession } = require("@auth0/nextjs-auth0")
-  console.log(GetSession)
+  const user = getSession(req, res).user;
 
   // Connect to DB and query using the passed activity_id
   const { db } = await connectToDatabase()
-  const activity_id = new ObjectId(params.activity)
+  const activity_id = new ObjectId(req.body.act_id)
 
   // Querying basic user data
   const user_data = await db.collection("users")
-  .findOne({ email: 'rayyanmaster@gmail.com' },
-           { projection: {first_name: 1, profile_pic: 1, active_courses: 1} })
+  .findOne({ email: user.email },
+          { projection: {first_name: 1, profile_pic: 1, active_courses: 1} })
 
-
+  
   //TODO: query hasComments and comments_id
   // Query detail about the selected activity
   const activity = await db.collection("student_activities").aggregate([
-    { $match: { student_id: new ObjectId("60d4c162ad30c9542761fecc"), activity_id: activity_id } },
+    { $match: { student_id: user_data._id, activity_id: activity_id } },
     { 
       $lookup: {
       from: "activities",
@@ -187,11 +92,11 @@ export async function getStaticProps(context) {
     { $limit: 1 }
   ]).toArray()
 
-  
+
   // Get all the modules in this course
   const course_profile = await db.collection("course_profiles").findOne(
     { 
-      student_id: new ObjectId("60d4c162ad30c9542761fecc"),
+      student_id: user_data._id,
       course_id: new ObjectId(activity[0].details[0].course_id)
     },
     { projection: { course_id: 1, modules: 1 }}
@@ -205,11 +110,11 @@ export async function getStaticProps(context) {
   let last = first + 6; // last day is the first day + 6
   let firstday = new Date(today.setDate(first));
   let lastday = new Date(today.setDate(last));
-  
+
   // Get the activities due this week
   const due_soon = await db.collection("student_activities").aggregate([
     { $match: {
-      student_id: new ObjectId("60d4c162ad30c9542761fecc"),
+      student_id: user_data._id,
       course_id: new ObjectId(activity[0].details[0].course_id),
       due_dates: { $gte: firstday, $lte: lastday }
     }},
@@ -241,7 +146,7 @@ export async function getStaticProps(context) {
   ))
   const todo = await db.collection("student_activities").aggregate([
     { $match: {
-      student_id: new ObjectId("60d4c162ad30c9542761fecc"),
+      student_id: user_data._id,
       module_id: new ObjectId(latest_module.uid)
     }},
     { $sort: {status: -1, order: 1} },
@@ -268,7 +173,7 @@ export async function getStaticProps(context) {
   // Get all the submission for this module
   const submissions = await db.collection("student_activities").aggregate([
     { $match: {
-      student_id: new ObjectId("60d4c162ad30c9542761fecc"),
+      student_id: user_data._id,
       module_id: activity[0].details[0].module_id,
       type: { $in: ['quiz','assignment','exam'] }
     }},
@@ -306,16 +211,16 @@ export async function getStaticProps(context) {
     : null
 
   return {
-    props: {
-      user_data:      JSON.parse(JSON.stringify(user_data)),
-      course_profile: JSON.parse(JSON.stringify(course_profile)),
-      activity:       JSON.parse(JSON.stringify(activity)),
-      nextActivity:   JSON.parse(JSON.stringify(nextActivity)),
-      comments:       comments ? JSON.parse(JSON.stringify(comments)) : null,
-      due_soon:       JSON.parse(JSON.stringify(due_soon)),
-      todo:           JSON.parse(JSON.stringify(todo)),
-      submissions:    JSON.parse(JSON.stringify(submissions))
-    },
-    revalidate: 1 // re-render in 1 sec after every request
+    user_data:      JSON.parse(JSON.stringify(user_data)),
+    course_profile: JSON.parse(JSON.stringify(course_profile)),
+    activity:       JSON.parse(JSON.stringify(activity)),
+    nextActivity:   JSON.parse(JSON.stringify(nextActivity)),
+    comments:       comments ? JSON.parse(JSON.stringify(comments)) : null,
+    due_soon:       JSON.parse(JSON.stringify(due_soon)),
+    todo:           JSON.parse(JSON.stringify(todo)),
+    submissions:    JSON.parse(JSON.stringify(submissions))
   }
+
+  res.json(result)
+
 }
