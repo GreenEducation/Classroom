@@ -99,8 +99,6 @@ export const getServerSideProps = withPageAuthRequired({
       }
     }
 
-    console.log(user_data.profile_pic)
-
 
     // Querying activities based on the user's id
     // TODO: Maybe change the ordering of the activities

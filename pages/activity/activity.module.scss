@@ -47,3 +47,18 @@
 .announcement p {
   max-width: fit-content;
 }
+
+@media only screen and (max-width: 36.75rem) {
+  .main {
+  
+    &__left {
+      margin-right: 0;
+      align-items: center;
+    }
+  
+    &__right {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
