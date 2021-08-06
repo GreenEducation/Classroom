@@ -8,7 +8,7 @@ export default withApiAuthRequired( async function handler(req, res) {
   const { db } = await connectToDatabase()
   const {matchedCount, modifiedCount} = await db.collection("student_activities").updateOne(
     { _id: new ObjectId(req.body.studentActId) },
-    { $set: { status: req.body.status, percentage_completed: 100 } }
+    { $set: { status: req.body.status } }
   )
 
   /**

@@ -21,7 +21,7 @@ export default function BigHero({ children, type, file_url="/" }) {
       break;
     case "video":
       heroContent = <video style={{width: `inherit`, height: `inherit`, maxHeight: `100%`, maxWidth: `100%`}}
-                      autoplay controls>
+                      controls>
                       <source src={file_url} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
