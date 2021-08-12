@@ -10,6 +10,29 @@ import Comments from '../../components/comments'
 import styles from './activity.module.scss'
 
 export default function Activity({ user_data, course_profile, activity, nextActivity, comments, due_soon, todo, submissions }) {
+
+  async function helpRequest(){
+    await fetch(`http://localhost:3000/api/help-request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(
+        {
+          course_id: course_profile.course_id,
+          module_id: activity[0].details[0].module_id,
+          activity_id: activity[0].activity_id,
+          student_id: user_data._id,
+          message: 'test',
+          resolved: false
+        }
+      ),
+    })
+    .then( res => console.log(res) )
+    .catch( err => console.error(err) )
+
+  }
+
   return (
     <Layout header={{
         id: user_data._id,
@@ -33,7 +56,8 @@ export default function Activity({ user_data, course_profile, activity, nextActi
             </progress>
             <BigHero type={activity[0].details[0].file_type} file_url={activity[0].details[0].file_url} />
             <div className={styles.details}>
-              <p>Details about the activity</p>
+              <span>Details about the activity.<br/>CS230 course</span>
+              <button className={styles.button} onClick={(event) => {event.preventDefault; helpRequest()}}>Get Help</button>
             </div>
             {
               (nextActivity.length!=0) ?
