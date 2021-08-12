@@ -10,7 +10,7 @@ import Checklist from '../../components/checklist'
 import styles from './module.module.scss'
 
 
-function Module({user_data, course_profile, due_soon, todo, activities}) {
+export default function Module({user_data, course_profile, due_soon, todo, activities}) {
 
   // GET the module_id
   const router = useRouter()
@@ -96,171 +96,159 @@ function Module({user_data, course_profile, due_soon, todo, activities}) {
   )
 }
 
-// Protecting the page. Must be signed in to access
-export default withPageAuthRequired(Module)
+
+//getServerSideProps Fetches data on each request
+//withPageAuthRequired protects this page
+export const getServerSideProps = withPageAuthRequired({
+
+  // Querying data and passing them as props
+  async getServerSideProps(context) {
+
+    // GET request must be a hexa string of length 24
+    const reg = /[0-9A-Fa-f]{24}/g
+    if(!reg.test(context.params.module)) return { notFound: true }
+
+    //Get user data from Auth0
+    const user_email = getSession(context.req).user.email
+
+    // Connect to DB and query using the passed module_id
+    const { db } = await connectToDatabase()
+    const module_id = new ObjectId(context.params.module)
+    
+    // Querying basic user data
+    const user_data = await db.collection("users")
+    .findOne({ email: user_email },
+            { projection: {first_name: 1, profile_pic: 1, active_courses: 1} })
 
 
-export async function getStaticPaths() {
-
-  //{ fallback: blocking } will server-render pages
-  // on-demand if the path doesn't exist.
-  //{ fallback: true } will server-render blank pages
-  // for every request and fill them with data on-demand
-  return {
-    paths: [],
-    fallback: 'blocking'
-  }
-}
-
-// Runs both on the server and client
-export async function getStaticProps({params}) {
-
-  // GET request must be a hexa string of length 24
-  const reg = /[0-9A-Fa-f]{24}/g
-  if(!reg.test(params.module)) return { notFound: true }
-
-  //Get user data from Auth0
-  //TODO: get user data from auth0
-  //const user_email = getSession(context.req).user.email
-
-  // Connect to DB and query using the passed module_id
-  const { db } = await connectToDatabase()
-  const module_id = new ObjectId(params.module)
-  
-  // Querying basic user data
-  const user_data = await db.collection("users")
-  .findOne({ email: 'rayyanmaster@gmail.com' },
-           { projection: {first_name: 1, profile_pic: 1, active_courses: 1} })
-
-
-  // Querying all activities based on the user's id and course_id
-  const activities = await db.collection("student_activities").aggregate([
-    { $match: { student_id: user_data._id, module_id: module_id } },
-    { $sort: {order: 1} },
-    { 
-      $lookup: {
-      from: "activities",
-      localField: "activity_id",
-      foreignField: "_id",
-      as: "details"
-      }
-    },
-    {
-      $project: {
-        activity_id: 1,
-        percent_completed: 1,
-        status: 1,
-        details: {
-          name: 1,
-          activity_type: 1,
-          duration: 1,
-          image_url: 1,
-          file_url: 1,
-          file_type: 1,
-          course_id: 1,
-          course_name: 1,
+    // Querying all activities based on the user's id and course_id
+    const activities = await db.collection("student_activities").aggregate([
+      { $match: { student_id: user_data._id, module_id: module_id } },
+      { $sort: {order: 1} },
+      { 
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
+        }
+      },
+      {
+        $project: {
+          activity_id: 1,
+          percent_completed: 1,
+          status: 1,
+          details: {
+            name: 1,
+            activity_type: 1,
+            duration: 1,
+            image_url: 1,
+            file_url: 1,
+            file_type: 1,
+            course_id: 1,
+            course_name: 1,
+          }
         }
       }
+    ]).toArray()
+    // Handles the case where the module is not found or user is not enrolled in the course
+    if (!activities) return { notFound: true }
+    // Handles the case where there are no activities in the module
+    //if (activities.length===0) return { notFound: true }
+
+
+    // Get all the modules in this course
+    const module = await db.collection("modules")
+      .findOne(
+        { _id: module_id },
+        { projection: { course_id: 1 }}
+      )
+    const course_id = new ObjectId(module.course_id)
+    const course_profile = await db.collection("course_profiles")
+      .findOne(
+        { student_id: user_data._id, course_id: course_id },
+        { projection: { course_id: 1, modules: 1 }}
+      )
+    // TODO: use aggregate retrieve course_id with needing 
+
+
+    // Calculate the first and last day of this week
+    // TODO: make it between the last 3 and next 3 days??
+    let today = new Date
+    let first = today.getDate() - today.getDay(); // First day is the day of the month - the day of the week
+    let last = first + 6; // last day is the first day + 6
+    let firstday = new Date(today.setDate(first));
+    let lastday = new Date(today.setDate(last));
+    
+    // Get the activities due this week
+    const due_soon = await db.collection("student_activities").aggregate([
+      { $match: {
+        student_id: user_data._id,
+        course_id,
+        due_dates: { $gte: firstday, $lte: lastday }
+      }},
+      { $sort: {due_dates: 1} },
+      {
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
+        }
+      },
+      {
+        $project: {
+          activity_id: 1,
+          percent_completed: 1,
+          status: 1,
+          details: { name: 1 }
+        }
+      },
+      { $limit: 5 }
+    ]).toArray()
+
+
+    // Querying activities from the oldest incomplete module,
+    // sort incomplete activities first and then complete
+    const latest_module = course_profile.modules.find((module) => (
+      module.percent_completed!=100
+    ))
+    const todo = await db.collection("student_activities").aggregate([
+      { $match: {
+        student_id: user_data._id,
+        module_id: new ObjectId(latest_module.uid)
+      }},
+      { $sort: {status: -1, order: 1} },
+      { 
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
+        }
+      },
+      {
+        $project: {
+          activity_id: 1,
+          course_id: 1,
+          module_id: 1,
+          percent_completed: 1,
+          status: 1,
+          details: { name: 1 }
+        }
+      },
+      { $limit: 5 }
+    ]).toArray()
+
+
+    return {
+      props: {
+        user_data:      JSON.parse(JSON.stringify(user_data)),
+        course_profile: JSON.parse(JSON.stringify(course_profile)),
+        due_soon:       JSON.parse(JSON.stringify(due_soon)),
+        todo:           JSON.parse(JSON.stringify(todo)),
+        activities:     JSON.parse(JSON.stringify(activities))
+      }
     }
-  ]).toArray()
-  // Handles the case where the module is not found or user is not enrolled in the course
-  if (!activities) return { notFound: true }
-  // Handles the case where there are no activities in the module
-  //if (activities.length===0) return { notFound: true }
-
-
-  // Get all the modules in this course
-  const module = await db.collection("modules")
-    .findOne(
-      { _id: module_id },
-      { projection: { course_id: 1 }}
-    )
-  const course_id = new ObjectId(module.course_id)
-  const course_profile = await db.collection("course_profiles")
-    .findOne(
-      { student_id: user_data._id, course_id: course_id },
-      { projection: { course_id: 1, modules: 1 }}
-    )
-  // TODO: use aggregate retrieve course_id with needing 
-
-
-  // Calculate the first and last day of this week
-  // TODO: make it between the last 3 and next 3 days??
-  let today = new Date
-  let first = today.getDate() - today.getDay(); // First day is the day of the month - the day of the week
-  let last = first + 6; // last day is the first day + 6
-  let firstday = new Date(today.setDate(first));
-  let lastday = new Date(today.setDate(last));
-  
-  // Get the activities due this week
-  const due_soon = await db.collection("student_activities").aggregate([
-    { $match: {
-      student_id: user_data._id,
-      course_id,
-      due_dates: { $gte: firstday, $lte: lastday }
-    }},
-    { $sort: {due_dates: 1} },
-    {
-      $lookup: {
-      from: "activities",
-      localField: "activity_id",
-      foreignField: "_id",
-      as: "details"
-      }
-    },
-    {
-      $project: {
-        activity_id: 1,
-        percent_completed: 1,
-        status: 1,
-        details: { name: 1 }
-      }
-    },
-    { $limit: 5 }
-  ]).toArray()
-
-
-  // Querying activities from the oldest incomplete module,
-  // sort incomplete activities first and then complete
-  const latest_module = course_profile.modules.find((module) => (
-    module.percent_completed!=100
-  ))
-  const todo = await db.collection("student_activities").aggregate([
-    { $match: {
-      student_id: user_data._id,
-      module_id: new ObjectId(latest_module.uid)
-    }},
-    { $sort: {status: -1, order: 1} },
-    { 
-      $lookup: {
-      from: "activities",
-      localField: "activity_id",
-      foreignField: "_id",
-      as: "details"
-      }
-    },
-    {
-      $project: {
-        activity_id: 1,
-        course_id: 1,
-        module_id: 1,
-        percent_completed: 1,
-        status: 1,
-        details: { name: 1 }
-      }
-    },
-    { $limit: 5 }
-  ]).toArray()
-
-
-  return {
-    props: {
-      user_data:      JSON.parse(JSON.stringify(user_data)),
-      course_profile:        JSON.parse(JSON.stringify(course_profile)),
-      due_soon:       JSON.parse(JSON.stringify(due_soon)),
-      todo:           JSON.parse(JSON.stringify(todo)),
-      activities:     JSON.parse(JSON.stringify(activities))
-    },
-    revalidate: 1 // re-render in 1 sec after every request
   }
-}
+})
