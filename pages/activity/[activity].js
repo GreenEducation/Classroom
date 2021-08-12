@@ -32,6 +32,9 @@ export default function Activity({ user_data, course_profile, activity, nextActi
               {activity[0].percent_completed}%
             </progress>
             <BigHero type={activity[0].details[0].file_type} file_url={activity[0].details[0].file_url} />
+            <div className={styles.details}>
+              <p>Details about the activity</p>
+            </div>
             {
               (nextActivity.length!=0) ?
               <div className={styles.upNext}>
