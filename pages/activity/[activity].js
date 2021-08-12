@@ -1,4 +1,4 @@
-import { withPageAuthRequired } from '@auth0/nextjs-auth0'
+import { withPageAuthRequired, getSession } from '@auth0/nextjs-auth0'
 import Head from 'next/head'
 import { ObjectId } from 'mongodb'
 import { connectToDatabase } from '../../util/mongodb'
@@ -9,7 +9,7 @@ import Checklist from '../../components/checklist'
 import Comments from '../../components/comments'
 import styles from './activity.module.scss'
 
-function Activity({ user_data, course_profile, activity, nextActivity, comments, due_soon, todo, submissions }) {
+export default function Activity({ user_data, course_profile, activity, nextActivity, comments, due_soon, todo, submissions }) {
   return (
     <Layout header={{
         id: user_data._id,
@@ -32,6 +32,9 @@ function Activity({ user_data, course_profile, activity, nextActivity, comments,
               {activity[0].percent_completed}%
             </progress>
             <BigHero type={activity[0].details[0].file_type} file_url={activity[0].details[0].file_url} />
+            <div className={styles.details}>
+              <p>Details about the activity</p>
+            </div>
             {
               (nextActivity.length!=0) ?
               <div className={styles.upNext}>
@@ -62,242 +65,240 @@ function Activity({ user_data, course_profile, activity, nextActivity, comments,
   )
 }
 
-// Protecting the page. Must be signed in to access
-export default withPageAuthRequired(Activity)
 
-export async function getStaticPaths() {
+//getServerSideProps Fetches data on each request
+//withPageAuthRequired protects this page
+export const getServerSideProps = withPageAuthRequired({
 
-  //{ fallback: blocking } will server-render pages
-  // on-demand if the path doesn't exist.
-  //{ fallback: true } will server-render blank pages
-  // for every request and fill them with data on-demand
-  return {
-    paths: [],
-    fallback: 'blocking'
-  }
-}
+  // Querying data and passing them as props
+  async getServerSideProps(context) {
 
-// Runs both on the server and client
-export async function getStaticProps(context) {
+    // GET request must be a hexa string of length 24
+    const reg = /[0-9A-Fa-f]{24}/g
+    if(!reg.test(context.params.activity)) return { notFound: true }
 
-  const {params} = context
+    //Get user data from Auth0
+    const user_email = getSession(context.req).user.email
 
-  // GET request must be a hexa string of length 24
-  const reg = /[0-9A-Fa-f]{24}/g
-  if(!reg.test(params.activity)) return { notFound: true }
+    // Connect to DB and query using the passed activity_id
+    const { db } = await connectToDatabase()
+    const activity_id = new ObjectId(context.params.activity)
 
-
-  // Connect to DB and query using the passed activity_id
-  const { db } = await connectToDatabase()
-  const activity_id = new ObjectId(params.activity)
-
-  // Querying basic user data
-  const user_data = await db.collection("users")
-  .findOne({ email: 'rayyanmaster@gmail.com' },
-           { projection: {first_name: 1, profile_pic: 1, active_courses: 1} })
+    // Querying basic user data
+    const user_data = await db.collection("users")
+    .findOne({ email: user_email },
+            { projection: {first_name: 1, profile_pic: 1, active_courses: 1} })
 
 
-  //TODO: query hasComments and comments_id
-  // Query detail about the selected activity
-  const activity = await db.collection("student_activities").aggregate([
-    { $match: { student_id: new ObjectId("60d4c162ad30c9542761fecc"), activity_id: activity_id } },
-    { 
-      $lookup: {
-      from: "activities",
-      localField: "activity_id",
-      foreignField: "_id",
-      as: "details"
-      }
-    },
-    {
-      $project: {
-        activity_id: 1,
-        percent_completed: 1,
-        status: 1,
-        order: 1,
-        details: {
-          name: 1,
-          activity_type: 1,
-          duration: 1,
-          image_url: 1,
-          file_url: 1,
-          file_type: 1,
-          course_id: 1,
-          module_id: 1,
-          comments_id: 1,
+    //TODO: query hasComments and comments_id
+    // Query detail about the selected activity
+    const activity = await db.collection("student_activities").aggregate([
+      { $match: { student_id: user_data._id, activity_id: activity_id } },
+      { 
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
+        }
+      },
+      {
+        $project: {
+          activity_id: 1,
+          percent_completed: 1,
+          status: 1,
+          order: 1,
+          details: {
+            name: 1,
+            activity_type: 1,
+            duration: 1,
+            image_url: 1,
+            file_url: 1,
+            file_type: 1,
+            course_id: 1,
+            module_id: 1,
+            comments_id: 1,
+          }
         }
       }
-    }
-  ]).toArray()
-  // Handles the case where the activity is not found or user is not assigned the activity
-  if (!activity) return { notFound: true }
+    ]).toArray()
+    // Handles the case where the activity is not found or user is not assigned the activity
+    if (!activity) return { notFound: true }
 
 
-  // Query details about the next activity
-  const nextActivity = await db.collection("student_activities").aggregate([
-    { 
-      $match: {
-        student_id: new ObjectId("60d4c162ad30c9542761fecc"),
-        course_id: activity[0].details[0].course_id,
-        order: ++activity[0].order
-      }
-    },
-    { 
-      $lookup: {
-      from: "activities",
-      localField: "activity_id",
-      foreignField: "_id",
-      as: "details"
-      }
-    },
-    {
-      $project: {
-        activity_id: 1,
-        percent_completed: 1,
-        status: 1,
-        order: 1,
-        details: {
-          name: 1,
-          activity_type: 1,
-          duration: 1,
-          image_url: 1,
-          course_id: 1,
-          course_name: 1,
+    // Query details about the next activity
+    const nextActivity = await db.collection("student_activities").aggregate([
+      { 
+        $match: {
+          student_id: user_data._id,
+          course_id: activity[0].details[0].course_id,
+          order: ++activity[0].order
+        }
+      },
+      { 
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
+        }
+      },
+      {
+        $project: {
+          activity_id: 1,
+          percent_completed: 1,
+          status: 1,
+          order: 1,
+          details: {
+            name: 1,
+            activity_type: 1,
+            duration: 1,
+            image_url: 1,
+            course_id: 1,
+            course_name: 1,
+          }
+        }
+      },
+      { $limit: 1 }
+    ]).toArray()
+
+    
+    // Get all the modules in this course
+    const course_profile = await db.collection("course_profiles").findOne(
+      { 
+        student_id: user_data._id,
+        course_id: new ObjectId(activity[0].details[0].course_id)
+      },
+      { projection: { course_id: 1, modules: 1 }}
+    )
+
+
+    // Calculate the first and last day of this week
+    // TODO: make it between the last 3 and next 3 days??
+    let today = new Date
+    let first = today.getDate() - today.getDay(); // First day is the day of the month - the day of the week
+    let last = first + 6; // last day is the first day + 6
+    let firstday = new Date(today.setDate(first));
+    let lastday = new Date(today.setDate(last));
+    
+    // Get the activities due this week
+    const due_soon = await db.collection("student_activities").aggregate([
+      { $match: {
+        student_id: user_data._id,
+        course_id: new ObjectId(activity[0].details[0].course_id),
+        due_dates: { $gte: firstday, $lte: lastday }
+      }},
+      { $sort: {due_dates: 1} },
+      { 
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
+        }
+      },
+      {
+        $project: {
+          activity_id: 1,
+          percent_completed: 1,
+          status: 1,
+          details: { name: 1 }
+        }
+      },
+      { $limit: 5 }
+    ]).toArray()
+
+
+    // Querying activities from the oldest incomplete module,
+    // sort incomplete activities first and then complete
+    const latest_module = course_profile.modules.find((module) => (
+      module.percent_completed!=100
+    ))
+    const todo = await db.collection("student_activities").aggregate([
+      { $match: {
+        student_id: user_data._id,
+        module_id: new ObjectId(latest_module.uid)
+      }},
+      { $sort: {status: -1, order: 1} },
+      { 
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
+        }
+      },
+      {
+        $project: {
+          activity_id: 1,
+          percent_completed: 1,
+          status: 1,
+          details: { name: 1 }
+        }
+      },
+      { $limit: 5 }
+    ]).toArray()
+
+
+    // Get all the submission for this module
+    const submissions = await db.collection("student_activities").aggregate([
+      { $match: {
+        student_id: user_data._id,
+        module_id: activity[0].details[0].module_id,
+        type: { $in: ['quiz','assignment','exam'] }
+      }},
+      { $sort: { order: 1} },
+      { 
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
+        }
+      },
+      {
+        $project: {
+          activity_id: 1,
+          percent_completed: 1,
+          status: 1,
+          details: { name: 1 }
         }
       }
-    },
-    { $limit: 1 }
-  ]).toArray()
-
-  
-  // Get all the modules in this course
-  const course_profile = await db.collection("course_profiles").findOne(
-    { 
-      student_id: new ObjectId("60d4c162ad30c9542761fecc"),
-      course_id: new ObjectId(activity[0].details[0].course_id)
-    },
-    { projection: { course_id: 1, modules: 1 }}
-  )
+    ]).toArray()
 
 
-  // Calculate the first and last day of this week
-  // TODO: make it between the last 3 and next 3 days??
-  let today = new Date
-  let first = today.getDate() - today.getDay(); // First day is the day of the month - the day of the week
-  let last = first + 6; // last day is the first day + 6
-  let firstday = new Date(today.setDate(first));
-  let lastday = new Date(today.setDate(last));
-  
-  // Get the activities due this week
-  const due_soon = await db.collection("student_activities").aggregate([
-    { $match: {
-      student_id: new ObjectId("60d4c162ad30c9542761fecc"),
-      course_id: new ObjectId(activity[0].details[0].course_id),
-      due_dates: { $gte: firstday, $lte: lastday }
-    }},
-    { $sort: {due_dates: 1} },
-    { 
-      $lookup: {
-      from: "activities",
-      localField: "activity_id",
-      foreignField: "_id",
-      as: "details"
-      }
-    },
-    {
-      $project: {
-        activity_id: 1,
-        percent_completed: 1,
-        status: 1,
-        details: { name: 1 }
-      }
-    },
-    { $limit: 5 }
-  ]).toArray()
+    // Get the comments pointer for this activity
+    const comments_head = await db.collection("comments").findOne(
+      { _id: new ObjectId(activity[0].details[0].comments_id) },
+      { projection: { comments_array: 1 }}
+    )
+    // TODO: do an aggregation query and get user image and other details
+    // Get the comments for the selected comments pointer
+    const comments = comments_head ?
+      await db.collection("posts").find(
+        { _id: { $in: comments_head.comments_array } }
+      ).project({tags: 0}).toArray()
+      : null
 
+    
+    //Keep track of changes to activities
+    let changeStream = db.collection("student_activities").watch()
+    changeStream.on("change", next => {
+      // process any change event
+      rerender
+    }, { fullDocument: "updateLookup" })
 
-  // Querying activities from the oldest incomplete module,
-  // sort incomplete activities first and then complete
-  const latest_module = course_profile.modules.find((module) => (
-    module.percent_completed!=100
-  ))
-  const todo = await db.collection("student_activities").aggregate([
-    { $match: {
-      student_id: new ObjectId("60d4c162ad30c9542761fecc"),
-      module_id: new ObjectId(latest_module.uid)
-    }},
-    { $sort: {status: -1, order: 1} },
-    { 
-      $lookup: {
-      from: "activities",
-      localField: "activity_id",
-      foreignField: "_id",
-      as: "details"
-      }
-    },
-    {
-      $project: {
-        activity_id: 1,
-        percent_completed: 1,
-        status: 1,
-        details: { name: 1 }
-      }
-    },
-    { $limit: 5 }
-  ]).toArray()
-
-
-  // Get all the submission for this module
-  const submissions = await db.collection("student_activities").aggregate([
-    { $match: {
-      student_id: new ObjectId("60d4c162ad30c9542761fecc"),
-      module_id: activity[0].details[0].module_id,
-      type: { $in: ['quiz','assignment','exam'] }
-    }},
-    { $sort: { order: 1} },
-    { 
-      $lookup: {
-      from: "activities",
-      localField: "activity_id",
-      foreignField: "_id",
-      as: "details"
-      }
-    },
-    {
-      $project: {
-        activity_id: 1,
-        percent_completed: 1,
-        status: 1,
-        details: { name: 1 }
+    return {
+      props: {
+        user_data:      JSON.parse(JSON.stringify(user_data)),
+        course_profile: JSON.parse(JSON.stringify(course_profile)),
+        activity:       JSON.parse(JSON.stringify(activity)),
+        nextActivity:   JSON.parse(JSON.stringify(nextActivity)),
+        comments:       comments ? JSON.parse(JSON.stringify(comments)) : null,
+        due_soon:       JSON.parse(JSON.stringify(due_soon)),
+        todo:           JSON.parse(JSON.stringify(todo)),
+        submissions:    JSON.parse(JSON.stringify(submissions))
       }
     }
-  ]).toArray()
-
-
-  // Get the comments pointer for this activity
-  const comments_head = await db.collection("comments").findOne(
-    { _id: new ObjectId(activity[0].details[0].comments_id) },
-    { projection: { comments_array: 1 }}
-  )
-  // TODO: do an aggregation query and get user image and other details
-  // Get the comments for the selected comments pointer
-  const comments = comments_head ?
-    await db.collection("posts").find(
-      { _id: { $in: comments_head.comments_array } }
-    ).project({tags: 0}).toArray()
-    : null
-
-  return {
-    props: {
-      user_data:      JSON.parse(JSON.stringify(user_data)),
-      course_profile: JSON.parse(JSON.stringify(course_profile)),
-      activity:       JSON.parse(JSON.stringify(activity)),
-      nextActivity:   JSON.parse(JSON.stringify(nextActivity)),
-      comments:       comments ? JSON.parse(JSON.stringify(comments)) : null,
-      due_soon:       JSON.parse(JSON.stringify(due_soon)),
-      todo:           JSON.parse(JSON.stringify(todo)),
-      submissions:    JSON.parse(JSON.stringify(submissions))
-    },
-    revalidate: 1 // re-render in 1 sec after every request
   }
-}
+})

@@ -22,7 +22,7 @@ function CheckListItem({title, item, done, activity_id, module_id, course_id, st
         <input type="checkbox" className={styles.checkbox} id={title + studentActId}
           onClick={() => setStatus(studentActId, module_id, course_id, student_id, 'complete')} />
         }
-        <label for={title + studentActId}>
+        <label htmlFor={title + studentActId}>
           <Link href={`/activity/${activity_id}`}><a>{item}</a></Link>
         </label>
       <br />
@@ -39,7 +39,7 @@ export default function Checklist({ title, items=[] }) {
         items.map((item) => (
           <CheckListItem title={title} item={item.details[0].name} done={item.status=="complete"}
             activity_id={item.activity_id} module_id={item.module_id} course_id={item.course_id}
-            student_id={item.student_id} studentActId={item._id} />
+            student_id={item.student_id} studentActId={item._id} key={item._id} />
         ))
         : 'You do not have any items in this check list'
       }

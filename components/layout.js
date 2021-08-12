@@ -38,7 +38,7 @@ export default function Layout({ children, header, sidebar }) {
               <select name="courses" id="courses" onChange={(e) => (location = e.target.value)}>
                 {
                   sidebar.courses?.map((course) => (
-                    <option value={`/course/${course.uid}`} selected={sidebar.this_course==course.uid}>
+                    <option value={`/course/${course.uid}`} key={course.uid} selected={sidebar.this_course==course.uid}>
                       {course.name}
                     </option>
                   ))
@@ -47,7 +47,7 @@ export default function Layout({ children, header, sidebar }) {
               <div>
               {
                 sidebar.modules?.map((module) => (
-                  <Link href={`/module/${module.uid}`}>
+                  <Link href={`/module/${module.uid}`} key={module.uid}>
                     <a>{module.name}</a>
                   </Link>
                 ))
@@ -55,7 +55,7 @@ export default function Layout({ children, header, sidebar }) {
               </div>
               </>
             : sidebar.courses?.map((course) => (
-                <Link href={`/course/${course.uid}`}>
+                <Link href={`/course/${course.uid}`} key={course.uid}>
                   <a>{course.name}</a>
                 </Link>
               ))
