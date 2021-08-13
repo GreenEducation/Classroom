@@ -156,7 +156,8 @@ export const getServerSideProps = withPageAuthRequired({
         $match: {
           student_id: user_data._id,
           course_id: activity[0].details[0].course_id,
-          order: ++activity[0].order
+          status: "incomplete",
+          order: { $gt: activity[0].order }
         }
       },
       { 
@@ -309,7 +310,7 @@ export const getServerSideProps = withPageAuthRequired({
     let changeStream = db.collection("student_activities").watch()
     changeStream.on("change", next => {
       // process any change event
-      rerender
+      context.res.json({ "name": "test" })
     }, { fullDocument: "updateLookup" })
 
     return {
