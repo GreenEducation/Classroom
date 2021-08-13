@@ -9,6 +9,18 @@ import Checklist from '../../components/checklist'
 import Comments from '../../components/comments'
 import styles from './activity.module.scss'
 
+
+// https://github.com/onedebos/pusher-chat-app/blob/main/pages/chat.js
+// Connecting to Pusher
+const pusher = new Pusher(process.env.PUSHER_KEY, {
+  cluster: process.env.PUSHER_CLUSTER,
+  encrypted: true
+})
+
+// Subscribe to a Pusher Channel
+const channel = pusher.subscribe('activities')
+
+
 export default function Activity({ user_data, course_profile, activity, nextActivity, comments, due_soon, todo, submissions }) {
 
   async function helpRequest(){
