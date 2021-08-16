@@ -1,6 +1,8 @@
 import { ObjectId } from 'mongodb'
 import { withApiAuthRequired, getSession } from '@auth0/nextjs-auth0'
 import { connectToDatabase } from "../../util/mongodb"
+import { pusher } from "../../util/pusher";
+
 
 export default withApiAuthRequired( async function handler(req, res) {
 
@@ -10,6 +12,12 @@ export default withApiAuthRequired( async function handler(req, res) {
     { _id: new ObjectId(req.body.studentActId) },
     { $set: { status: req.body.status } }
   )
+
+  // trigger a new post event via pusher
+  await pusher.trigger("activities", "activity-status", {
+    studentActId: req.body.studentActId,
+    status: req.body.status
+  })
 
   /**
    * Get all the activities in this module

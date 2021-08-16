@@ -44,3 +44,15 @@
 .announcement p {
   max-width: fit-content;
 }
+
+.popup {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  background: $light-gray;
+  box-shadow: 0 0 5px 0 $gray;
+  padding: 0.5em 1em;
+  font-size: 1.5em;
+  font-family: $font-family;
+}

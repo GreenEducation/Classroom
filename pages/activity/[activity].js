@@ -1,6 +1,8 @@
 import { withPageAuthRequired, getSession } from '@auth0/nextjs-auth0'
 import Head from 'next/head'
 import { ObjectId } from 'mongodb'
+import { useEffect, useState } from "react"
+import Pusher from "pusher-js"
 import { connectToDatabase } from '../../util/mongodb'
 import Layout, { siteTitle } from '../../components/layout'
 import BigHero from '../../components/big-hero'
@@ -10,19 +12,100 @@ import Comments from '../../components/comments'
 import styles from './activity.module.scss'
 
 
-// https://github.com/onedebos/pusher-chat-app/blob/main/pages/chat.js
-// Connecting to Pusher
-const pusher = new Pusher(process.env.PUSHER_KEY, {
-  cluster: process.env.PUSHER_CLUSTER,
-  encrypted: true
-})
-
-// Subscribe to a Pusher Channel
-const channel = pusher.subscribe('activities')
-
-
 export default function Activity({ user_data, course_profile, activity, nextActivity, comments, due_soon, todo, submissions }) {
 
+
+  // https://github.com/onedebos/pusher-chat-app/blob/main/pages/chat.js
+  // Connecting to Pusher
+  const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+    cluster: "us2",
+    encrypted: true
+  })
+
+  // Init checklist states
+  const [todoList, setTodo] = useState(todo)
+  const [dueSoonList, setDueSoon] = useState(due_soon)
+  const [submissionsList, setSubmissions] = useState(submissions)
+  const [activityUpdate, setActivityUpdate] = useState(false)
+
+  // Runs when Component is mounted
+  useEffect(() => {
+    // Subscribe to a Pusher Channel
+    const channel = pusher.subscribe('activities')
+
+    // TODO:
+    // - Should be user specific
+    // When any activity is updated
+    channel.bind("activity-status", (data) => {
+
+      // TODO: change an item in an array will not cause rerender,
+      // since react compares the ref.s of the array
+      // Slicing every array to create a change in the state
+      setTodo((prevState) => {
+        prevState.find((obj, index) => {
+          if (obj._id === data.studentActId) {
+            prevState[index] = {
+              _id: obj._id,
+              activity_id: obj.activity_id,
+              percent_completed: obj.percent_completed,
+              status: data.status,
+              details: [{ name: obj.details[0].name }]
+            }
+            prevState.slice()
+            return true // stop searching
+          }
+        })
+        return prevState
+      })
+
+      setSubmissions((prevState) => {
+        prevState.find((obj, index) => {
+          if (obj._id === data.studentActId) {
+            prevState[index] = {
+              _id: obj._id,
+              activity_id: obj.activity_id,
+              percent_completed: obj.percent_completed,
+              status: data.status,
+              details: [{ name: obj.details[0].name }]
+            }
+            prevState.slice()
+            return true // stop searching
+          }
+        })
+        return prevState
+      })
+
+      setDueSoon((prevState) => {
+        prevState.find((obj, index) => {
+          if (obj._id === data.studentActId) {
+            prevState[index] = {
+              _id: obj._id,
+              activity_id: obj.activity_id,
+              percent_completed: obj.percent_completed,
+              status: data.status,
+              details: [{ name: obj.details[0].name }]
+            }
+            prevState.slice()
+            return true // stop searching
+          }
+        })
+        return prevState
+      })
+
+      // Showing a pop for a few seconds notifying the user of the change
+      setActivityUpdate(true)
+      setTimeout(() => setActivityUpdate(false), 3500);
+      
+    })
+
+    // Closing Pusher Channel
+    return () => {
+      pusher.unsubscribe("activities");
+    }
+  }, [])
+
+
+  // Send Help Request data to an API endpoint
   async function helpRequest(){
     await fetch(`http://localhost:3000/api/help-request`, {
       method: 'POST',
@@ -42,8 +125,8 @@ export default function Activity({ user_data, course_profile, activity, nextActi
     })
     .then( res => console.log(res) )
     .catch( err => console.error(err) )
-
   }
+
 
   return (
     <Layout header={{
@@ -69,7 +152,13 @@ export default function Activity({ user_data, course_profile, activity, nextActi
             <BigHero type={activity[0].details[0].file_type} file_url={activity[0].details[0].file_url} />
             <div className={styles.details}>
               <span>Details about the activity.<br/>CS230 course</span>
-              <button className={styles.button} onClick={(event) => {event.preventDefault; helpRequest()}}>Get Help</button>
+              <div className={styles.getHelp}>
+                <a onClick={(e) => {e.preventDefault; toggleHelp()}}>Get help</a>
+                <span id="help-form">
+                  <textarea></textarea>
+                  <button className={styles.button} onClick={(event) => {event.preventDefault; helpRequest()}}>Get Help</button>
+                </span>
+              </div>
             </div>
             {
               (nextActivity.length!=0) ?
@@ -89,11 +178,12 @@ export default function Activity({ user_data, course_profile, activity, nextActi
                   comments={comments} />
                 : ''
             }
+            { activityUpdate ? <div className={styles.popup}>Activity updated</div> : '' }
           </div>
           <div className={styles.main__right}>
-            <Checklist title="Submissions" items={submissions} />
-            <Checklist title="Due this week" items={due_soon} />
-            <Checklist title="To Do" items={todo} />
+            <Checklist title="Submissions" items={submissionsList} />
+            <Checklist title="Due this week" items={dueSoonList} />
+            <Checklist title="To Do" items={todoList} />
           </div>
         </div>
       </div>
@@ -317,13 +407,6 @@ export const getServerSideProps = withPageAuthRequired({
       ).project({tags: 0}).toArray()
       : null
 
-    
-    //Keep track of changes to activities
-    let changeStream = db.collection("student_activities").watch()
-    changeStream.on("change", next => {
-      // process any change event
-      context.res.json({ "name": "test" })
-    }, { fullDocument: "updateLookup" })
 
     return {
       props: {

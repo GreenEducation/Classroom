@@ -1,6 +1,8 @@
 import Head from 'next/head'
 import { withPageAuthRequired, getSession } from '@auth0/nextjs-auth0'
 import { ObjectId } from 'mongodb'
+import { useEffect, useState } from "react"
+import Pusher from "pusher-js"
 import { connectToDatabase } from '../../util/mongodb'
 import Layout, { siteTitle } from '../../components/layout'
 import BigHero from '../../components/big-hero'
@@ -11,6 +13,78 @@ import styles from './course.module.scss'
 
 
 export default function Course({ user_data, course_profile, activities, todo, due_soon, announcements }) {
+
+  // Connecting to Pusher
+  const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+    cluster: "us2",
+    encrypted: true
+  })
+
+  // Init checklist states
+  const [todoList, setTodo] = useState(todo)
+  const [dueSoonList, setDueSoon] = useState(due_soon)
+  const [activityUpdate, setActivityUpdate] = useState(false)
+
+  // Runs when Component is mounted
+  useEffect(() => {
+    // Subscribe to a Pusher Channel
+    const channel = pusher.subscribe('activities')
+
+    // TODO:
+    // - Should be user specific
+    // When any activity is updated
+    channel.bind("activity-status", (data) => {
+
+      // TODO: change an item in an array will not cause rerender,
+      // since react compares the ref.s of the array
+      // Slicing every array to create a change in the state
+      setTodo((prevState) => {
+        prevState.find((obj, index) => {
+          if (obj._id === data.studentActId) {
+            prevState[index] = {
+              _id: obj._id,
+              activity_id: obj.activity_id,
+              percent_completed: obj.percent_completed,
+              status: data.status,
+              details: [{ name: obj.details[0].name }]
+            }
+            prevState.slice()
+            return true // stop searching
+          }
+        })
+        return prevState
+      })
+
+      setDueSoon((prevState) => {
+        prevState.find((obj, index) => {
+          if (obj._id === data.studentActId) {
+            prevState[index] = {
+              _id: obj._id,
+              activity_id: obj.activity_id,
+              percent_completed: obj.percent_completed,
+              status: data.status,
+              details: [{ name: obj.details[0].name }]
+            }
+            prevState.slice()
+            return true // stop searching
+          }
+        })
+        return prevState
+      })
+
+      // Showing a pop for a few seconds notifying the user of the change
+      setActivityUpdate(true)
+      setTimeout(() => setActivityUpdate(false), 3500);
+      
+    })
+
+    // Closing Pusher Channel
+    return () => {
+      pusher.unsubscribe("activities");
+    }
+  }, [])
+
+
   return (
     <Layout header={{
         id: user_data._id,
@@ -55,10 +129,11 @@ export default function Course({ user_data, course_profile, activities, todo, du
                 ))
               }
             </div>
+            { activityUpdate ? <div className={styles.popup}>Activity updated</div> : '' }
           </div>
           <div className={styles.main__right}>
-            <Checklist title="Due this week" items={due_soon} />
-            <Checklist title="To Do" items={todo} />
+            <Checklist title="Due this week" items={dueSoonList} />
+            <Checklist title="To Do" items={todoList} />
           </div>
         </div>
       </div>
