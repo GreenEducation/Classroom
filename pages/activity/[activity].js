@@ -107,7 +107,7 @@ export default function Activity({ user_data, course_profile, activity, nextActi
 
   // Send Help Request data to an API endpoint
   async function helpRequest(){
-    await fetch(`http://localhost:3000/api/help-request`, {
+    await fetch(`https://greened.app/api/help-request`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

@@ -8,7 +8,7 @@ function CheckListItem({title, item, done, activity_id, studentActId}) {
   async function setStatus(studentActId) {
     let status = document.getElementById(title + studentActId).checked
     status = status ? 'complete' : 'incomplete'
-    const res = await fetch('http://localhost:3000/api/activity-status', {
+    const res = await fetch('https://greened.app/api/activity-status', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
