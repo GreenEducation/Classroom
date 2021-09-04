@@ -121,7 +121,7 @@ export default function Course({ user_data, course_profile, activities, todo, du
             <div className={styles.announcement}>
               {
                 announcements?.map((announcement) => (
-                  <Card> key={announcement._id}
+                  <Card key={announcement._id}>
                     <small>Posted by {announcement.creator_name} - {announcement.course_name}</small>
                     <h6>{announcement.title}</h6>
                     <p>{announcement.content}</p>
@@ -153,7 +153,7 @@ export const getServerSideProps = withPageAuthRequired({
     const reg = /[0-9A-Fa-f]{24}/g
     if(!reg.test(context.params.course)) return { notFound: true }
 
-    //Get user data from Auth0
+    // Get user data from Auth0
     const user_email = getSession(context.req).user.email
 
     // Connect to DB and query using the passed course_id
@@ -232,6 +232,8 @@ export const getServerSideProps = withPageAuthRequired({
 
 
       // Querying now and next activities based on the user's id and course_id
+      // TODO: query from 'activities' first and then if student_activities exist get it,
+      //        else create a student activity.
       // TODO: handle the case where there are no such activities
       const activities = await db.collection("student_activities").aggregate([
         { $match: { student_id: user_data._id, course_id: course_id, status: "incomplete" } },

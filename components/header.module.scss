@@ -12,7 +12,7 @@
   width: -webkit-fill-available;
   width: stretch;
   z-index: 999;
-  border-bottom: 1px solid #cccccc;
+  border-bottom: 1px solid $gray;
 
   &__left {
     display: flex;

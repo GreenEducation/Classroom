@@ -39,7 +39,7 @@ p {
 }
 small {
   font-size: $small-font-size;
-  color: $gray;
+  color: $dark-gray;
 }
 h1 {
   font-size: $h1-font-size;
@@ -100,7 +100,7 @@ hr {
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: $gray;
+  background: $dark-gray;
   border-radius: 5px;
 }
 
