@@ -152,13 +152,6 @@ export default function Activity({ user_data, course_profile, activity, nextActi
             <BigHero type={activity[0].details[0].file_type} file_url={activity[0].details[0].file_url} />
             <div className={styles.details}>
               <span>Details about the activity.<br/>CS230 course</span>
-              <div className={styles.getHelp}>
-                <a onClick={(e) => {e.preventDefault; toggleHelp()}}>Get help</a>
-                <span id="help-form">
-                  <textarea></textarea>
-                  <button className={styles.button} onClick={(event) => {event.preventDefault; helpRequest()}}>Get Help</button>
-                </span>
-              </div>
             </div>
             {
               (nextActivity.length!=0) ?
