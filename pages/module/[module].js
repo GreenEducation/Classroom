@@ -215,37 +215,48 @@ export const getServerSideProps = withPageAuthRequired({
 
 
     // Querying all activities based on the user's id and course_id
-    const activities = await db.collection("student_activities").aggregate([
-      { $match: { student_id: user_data._id, module_id: module_id } },
-      { $sort: {order: 1} },
-      { 
-        $lookup: {
-        from: "activities",
-        localField: "activity_id",
-        foreignField: "_id",
-        as: "details"
-        }
-      },
-      {
+    const activities_list = await db.collection("activities").find(
+      { module_id: module_id },
+      { $sort: {order: 1},
         $project: {
-          activity_id: 1,
-          percent_completed: 1,
-          status: 1,
-          details: {
-            name: 1,
-            activity_type: 1,
-            duration: 1,
-            image_url: 1,
-            file_url: 1,
-            file_type: 1,
-            course_id: 1,
-            course_name: 1,
-          }
+          name: 1,
+          activity_type: 1,
+          duration: 1,
+          image_url: 1,
+          file_url: 1,
+          file_type: 1,
+          course_id: 1,
+          course_name: 1
         }
       }
-    ]).toArray()
+    ).toArray()
+
     // Handles the case where the module is not found or user is not enrolled in the course
-    if (!activities) return { notFound: true }
+    if (!activities_list) return { notFound: true }
+
+    /**TODO:
+     * get array of activity ids
+     * for each activity id, check to see if there is a student_activity
+     * if there is a student_activity, fetch data
+     * else, create a student_activity and save data
+     */
+    const act_ids = activities_list.map(activity => activity._id)
+     const student_activities = await db.collection("student_activities").find(
+      { activity_id: {$in: act_ids} },
+      { $sort: {order: 1},
+        $project: {
+          percent_completed: 1,
+          status: 1,
+        }
+      }
+    )
+    console.log(student_activities)
+    const activities = {
+      ...student_activities,
+      details: activities_list
+    }
+    
+    
     // Handles the case where there are no activities in the module
     //if (activities.length===0) return { notFound: true }
 
@@ -256,6 +267,10 @@ export const getServerSideProps = withPageAuthRequired({
         { _id: module_id },
         { projection: { course_id: 1 }}
       )
+    // Handles the case where the module is not found
+    if (!module) return { notFound: true }
+    
+
     const course_id = new ObjectId(module.course_id)
     const course_profile = await db.collection("course_profiles")
       .findOne(
