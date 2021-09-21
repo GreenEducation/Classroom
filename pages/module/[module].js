@@ -214,7 +214,7 @@ export const getServerSideProps = withPageAuthRequired({
             { projection: {first_name: 1, profile_pic: 1, active_courses: 1} })
 
 
-    // Querying all activities based on the user's id and course_id
+    // Querying all activities in this module
     const activities_list = await db.collection("activities").find(
       { module_id: module_id },
       { $sort: {order: 1},
@@ -231,7 +231,7 @@ export const getServerSideProps = withPageAuthRequired({
       }
     ).toArray()
 
-    // Handles the case where the module is not found or user is not enrolled in the course
+    // Handles the case where the module is not found
     if (!activities_list) return { notFound: true }
 
     /**TODO:
@@ -242,19 +242,20 @@ export const getServerSideProps = withPageAuthRequired({
      */
     const act_ids = activities_list.map(activity => activity._id)
      const student_activities = await db.collection("student_activities").find(
-      { activity_id: {$in: act_ids} },
+      { activity_id: {$in: act_ids}, student_id: user_data._id },
       { $sort: {order: 1},
         $project: {
           percent_completed: 1,
           status: 1,
         }
       }
-    )
+    ).toArray()
     console.log(student_activities)
-    const activities = {
-      ...student_activities,
-      details: activities_list
-    }
+    const activities = []
+    student_activities.forEach((student_activity, index) => {
+      activities.push({student_activity, details: [activities_list[index]]})
+    })
+    //console.log(activities)
     
     
     // Handles the case where there are no activities in the module
