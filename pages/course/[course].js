@@ -183,135 +183,122 @@ export const getServerSideProps = withPageAuthRequired({
     let lastday = new Date(today.setDate(last));
 
 
-    //Keep track of changes to activities
-    let changeStream = db.collection("student_activities").watch()
-    changeStream.on("change", next => {
-      // process any change event
-      return getCourseData()
-    }, { fullDocument: "updateLookup" })
+    // Check if the user is enrolled in this course & get modules in the course
+    const course_profile = await db.collection("course_profiles")
+      .findOne(
+        { student_id: user_data._id, course_id: course_id },
+        { projection: { course_id: 1, modules: 1 }}
+      )
+    // Handles the case where the user is not enrolled in this course
+    // or the course is not found
+    if (!course_profile) return { notFound: true }
 
-
-    async function getCourseData() {
-      // Check if the user is enrolled in this course & get modules in the course
-      const course_profile = await db.collection("course_profiles")
-        .findOne(
-          { student_id: user_data._id, course_id: course_id },
-          { projection: { course_id: 1, modules: 1 }}
-        )
-      // Handles the case where the user is not enrolled in this course
-      // or the course is not found
-      if (!course_profile) return { notFound: true }
-
-      
-      // Get the activities due this week
-      const due_soon = await db.collection("student_activities").aggregate([
-        { $match: {
-          student_id: user_data._id,
-          course_id: course_id,
-          due_dates: { $gte: firstday, $lte: lastday }
-        }},
-        { $sort: {due_dates: 1} },
-        { 
-          $lookup: {
-          from: "activities",
-          localField: "activity_id",
-          foreignField: "_id",
-          as: "details"
-          }
-        },
-        {
-          $project: {
-            activity_id: 1,
-            percent_completed: 1,
-            status: 1,
-            details: { name: 1 }
-          }
-        },
-        { $limit: 5 }
-      ]).toArray()
-
-
-      // Querying now and next activities based on the user's id and course_id
-      // TODO: query from 'activities' first and then if student_activities exist get it,
-      //        else create a student activity.
-      // TODO: handle the case where there are no such activities
-      const activities = await db.collection("student_activities").aggregate([
-        { $match: { student_id: user_data._id, course_id: course_id, status: "incomplete" } },
-        { $sort: {order: 1} },
-        { 
-          $lookup: {
-          from: "activities",
-          localField: "activity_id",
-          foreignField: "_id",
-          as: "details"
-          }
-        },
-        {
-          $project: {
-            activity_id: 1,
-            percent_completed: 1,
-            status: 1,
-            details: {
-              name: 1,
-              duration: 1,
-              image_url: 1,
-              file_url: 1,
-              file_type: 1,
-              course_id: 1,
-              course_name: 1,
-            }
-          }
-        },
-        { $limit: 2 }
-      ]).toArray()
-
-
-      // Querying activities from the oldest incomplete module,
-      // sort incomplete activities first and then complete
-      const latest_module = course_profile.modules.find((module) => (
-        module.percent_completed!=100
-      ))
-      const todo = await db.collection("student_activities").aggregate([
-        { $match: {
-          student_id: user_data._id,
-          module_id: new ObjectId(latest_module.uid)
-        }},
-        { $sort: {status: -1, order: 1} },
-        { 
-          $lookup: {
-          from: "activities",
-          localField: "activity_id",
-          foreignField: "_id",
-          as: "details"
-          }
-        },
-        {
-          $project: {
-            student_id: 1,
-            activity_id: 1,
-            course_id: 1,
-            module_id: 1,
-            percent_completed: 1,
-            status: 1,
-            details: { name: 1 }
-          }
-        },
-        { $limit: 5 }
-      ]).toArray()
-
-      console.log(activities)
-      return {
-        props: {
-          user_data:      JSON.parse(JSON.stringify(user_data)),
-          course_profile: JSON.parse(JSON.stringify(course_profile)),
-          activities:     JSON.parse(JSON.stringify(activities)),
-          due_soon:       JSON.parse(JSON.stringify(due_soon)),
-          todo:           JSON.parse(JSON.stringify(todo)),
-          announcements:  JSON.parse(JSON.stringify(announcements))
+    
+    // Get the activities due this week
+    const due_soon = await db.collection("student_activities").aggregate([
+      { $match: {
+        student_id: user_data._id,
+        course_id: course_id,
+        due_dates: { $gte: firstday, $lte: lastday }
+      }},
+      { $sort: {due_dates: 1} },
+      { 
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
         }
+      },
+      {
+        $project: {
+          activity_id: 1,
+          percent_completed: 1,
+          status: 1,
+          details: { name: 1 }
+        }
+      },
+      { $limit: 5 }
+    ]).toArray()
+
+
+    // Querying now and next activities based on the user's id and course_id
+    // TODO: query from 'activities' first and then if student_activities exist get it,
+    //        else create a student activity.
+    // TODO: handle the case where there are no such activities
+    const activities = await db.collection("student_activities").aggregate([
+      { $match: { student_id: user_data._id, course_id: course_id, status: "incomplete" } },
+      { $sort: {order: 1} },
+      { 
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
+        }
+      },
+      {
+        $project: {
+          activity_id: 1,
+          percent_completed: 1,
+          status: 1,
+          details: {
+            name: 1,
+            duration: 1,
+            image_url: 1,
+            file_url: 1,
+            file_type: 1,
+            course_id: 1,
+            course_name: 1,
+          }
+        }
+      },
+      { $limit: 2 }
+    ]).toArray()
+
+
+    // Querying activities from the oldest incomplete module,
+    // sort incomplete activities first and then complete
+    const latest_module = course_profile.modules.find((module) => (
+      module.percent_completed!=100
+    ))
+    const todo = await db.collection("student_activities").aggregate([
+      { $match: {
+        student_id: user_data._id,
+        module_id: new ObjectId(latest_module.uid)
+      }},
+      { $sort: {status: -1, order: 1} },
+      { 
+        $lookup: {
+        from: "activities",
+        localField: "activity_id",
+        foreignField: "_id",
+        as: "details"
+        }
+      },
+      {
+        $project: {
+          student_id: 1,
+          activity_id: 1,
+          course_id: 1,
+          module_id: 1,
+          percent_completed: 1,
+          status: 1,
+          details: { name: 1 }
+        }
+      },
+      { $limit: 5 }
+    ]).toArray()
+
+    return {
+      props: {
+        user_data:      JSON.parse(JSON.stringify(user_data)),
+        course_profile: JSON.parse(JSON.stringify(course_profile)),
+        activities:     JSON.parse(JSON.stringify(activities)),
+        due_soon:       JSON.parse(JSON.stringify(due_soon)),
+        todo:           JSON.parse(JSON.stringify(todo)),
+        announcements:  JSON.parse(JSON.stringify(announcements))
       }
     }
-    // Running DB queries for the first time
-    return getCourseData()
   }
 });
