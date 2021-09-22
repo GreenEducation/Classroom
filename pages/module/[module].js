@@ -213,39 +213,70 @@ export const getServerSideProps = withPageAuthRequired({
     .findOne({ email: user_email },
             { projection: {first_name: 1, profile_pic: 1, active_courses: 1} })
 
-
-    // Querying all activities based on the user's id and course_id
-    const activities = await db.collection("student_activities").aggregate([
-      { $match: { student_id: user_data._id, module_id: module_id } },
-      { $sort: {order: 1} },
-      { 
-        $lookup: {
-        from: "activities",
-        localField: "activity_id",
-        foreignField: "_id",
-        as: "details"
-        }
-      },
-      {
+    
+    // Querying all activities in this module
+    const activities_list = await db.collection("activities").find(
+      { module_id: module_id },
+      { $sort: {order: 1},
         $project: {
-          activity_id: 1,
-          percent_completed: 1,
-          status: 1,
-          details: {
-            name: 1,
-            activity_type: 1,
-            duration: 1,
-            image_url: 1,
-            file_url: 1,
-            file_type: 1,
-            course_id: 1,
-            course_name: 1,
-          }
+          name: 1,
+          activity_type: 1,
+          duration: 1,
+          image_url: 1,
+          file_url: 1,
+          file_type: 1,
+          course_id: 1,
+          course_name: 1
         }
       }
-    ]).toArray()
+    ).toArray()
+
+    // Handles the case where there are no activities in this module
+    if (!activities_list) return { notFound: true }
+
+    // Create an array of activity_ids
+    const act_ids = activities_list.map(activity => activity._id)
+    // Get student_activities for each activity_id
+    const student_activities = await db.collection("student_activities").find(
+      { activity_id: {$in: act_ids}, student_id: user_data._id },
+      { $sort: {order: 1},
+        $project: {
+          percent_completed: 1,
+          status: 1,
+          activity_id: 1
+        }
+      }
+    ).toArray()
+
+    // Combine activities and student_activites
+    const activities = []
+    for (let i = 0; i < activities_list.length; i++) {
+      if (!student_activities[i] || activities_list[i]._id.toString() != student_activities[i].activity_id.toString()) {
+        
+        // Create a new student_activity element & insert it into the array
+        let new_activity = {
+          _id: new ObjectId(),
+          id: 0,
+          student_id: user_data._id,
+          activity_id: activities_list[i]._id,
+          course_id: activities_list[i].course_id,
+          module_id: activities_list[i].module_id,
+          status: "incomplete",
+          percent_completed: 0,
+          grade: -1,
+          order: activities_list[i].order,
+          asked_help: false,
+          help_message: {content: "", date_time: ""}
+        }
+        db.collection("student_activities").insertOne(new_activity)
+        student_activities.splice(i, 0, new_activity)
+
+      }
+      activities.push({...student_activities[i], details: [activities_list[i]]})
+    }
+
     // Handles the case where the module is not found or user is not enrolled in the course
-    if (!activities) return { notFound: true }
+    //if (!activities) return { notFound: true }
     // Handles the case where there are no activities in the module
     //if (activities.length===0) return { notFound: true }
 
@@ -262,7 +293,6 @@ export const getServerSideProps = withPageAuthRequired({
         { student_id: user_data._id, course_id: course_id },
         { projection: { course_id: 1, modules: 1 }}
       )
-    // TODO: use aggregate retrieve course_id with needing 
 
 
     // Calculate the first and last day of this week
