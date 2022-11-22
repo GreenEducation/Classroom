@@ -15,6 +15,7 @@ export default function Home() {
         </h1><br /><br />
         <input type="text" placeholder="Email Address" className="h-10 w-96 border-2 rounded-full pl-4 text-neutral-900 border-neutral-900" />
         <button className="underline m-2" onClick={()=>setRegistered(true)}>Register For Early Access</button>
+        <a href="https://ko-fi.com/greened" className="mt-5">Sponsor this platform</a>
       </main>
 
     </Layout>
