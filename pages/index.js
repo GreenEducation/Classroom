@@ -11,11 +11,10 @@ export default function Home() {
 
       <main className="flex flex-col justify-center items-center">
         <h1 className="text-5xl font-bold">
-          {registered ? 'Registered' : 'GreenEd'}
+          {registered ? 'We will email you soon. Thanks!' : 'Get all your courses organized into Notion and Google Calendar. $50/term.'}
         </h1><br /><br />
         <input type="text" placeholder="Email Address" className="h-10 w-96 border-2 rounded-full pl-4 text-neutral-900 border-neutral-900" />
-        <button className="underline m-2" onClick={()=>setRegistered(true)}>Register For Early Access</button>
-        <a href="https://ko-fi.com/greened" className="mt-5">Sponsor this platform</a>
+        <button className="underline m-2" onClick={()=>setRegistered(true)}>Submit</button>
       </main>
 
     </Layout>
