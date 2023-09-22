@@ -1,0 +1,28 @@
+A student must be able to register for a course
+When a student registers for a course, a student_profile must be create for that student for that course
+The student_profile keeps track of the student's progress
+The student has a list of all the courses they are registered for
+A profile is also created for each activity in the registered course.
+
+
+
+When a student registers for a course. Where is that data stored??
+- Is the course_profile sufficient for both the student and the teachers
+
+
+
+Course is created                 -> An entry is made into the course collection
+A student registers for a course  -> A course_profile is created
+                                     The course is added to the user's list of active_courses
+                                     Student_activities are created for all of the activities in the course
+                                     All Modules are added to the course_profile
+                                     Subscribe to the course's pusher channel
+A module is created               -> An entry is made into the modules collection
+                                     Send this update to a PUSHER channel
+                                     Course_profile's modules array is updated to have the new module
+An activity is created            -> An entry is made into the activities collection
+                                     Send this update to a PUSHER Channel
+                                     Student_activities are made for each student in the course
+A student opens the site          -> Check if there are any new activities or modules, and update accordingly (Use Pusher for this)
+                                     
+                                     
